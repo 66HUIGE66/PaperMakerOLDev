@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表格样式测试</title>
+    <style>
+        /* 基础样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 表格样式 - 从AIAssistantPage.css复制 */
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .table-container table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin: 20px 0 !important;
+            border: 1px solid #e8e8e8 !important;
+            border-radius: 0 !important;
+            overflow: hidden !important;
+            box-shadow: none !important;
+            background: white !important;
+            display: table !important;
+        }
+        
+        .table-container table th,
+        .table-container table td {
+            border: 1px solid #e8e8e8 !important;
+            padding: 12px 16px !important;
+            text-align: left !important;
+            line-height: 1.6 !important;
+            display: table-cell !important;
+        }
+        
+        .table-container table th {
+            background: #f5f5f5 !important;
+            font-weight: 600 !important;
+            color: #262626 !important;
+            text-align: center !important;
+            border-bottom: 2px solid #e8e8e8 !important;
+        }
+        
+        .table-container table td {
+            text-align: left !important;
+            color: #333 !important;
+        }
+        
+        .table-container table tr {
+            display: table-row !important;
+        }
+        
+        .table-container table thead {
+            display: table-header-group !important;
+        }
+        
+        .table-container table tbody {
+            display: table-row-group !important;
+        }
+        
+        .table-container table tr:nth-child(even) {
+            background: #fafafa !important;
+        }
+        
+        .table-container table tr:nth-child(odd) {
+            background: #fff !important;
+        }
+        
+        .table-container table tr:hover {
+            background: #f0f7ff !important;
+            transition: background 0.2s;
+        }
+        
+        .markdown-content table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin: 20px 0 !important;
+            border: 1px solid #e8e8e8 !important;
+            border-radius: 0 !important;
+            overflow: hidden !important;
+            box-shadow: none !important;
+            background: white !important;
+            display: table !important;
+        }
+        
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #e8e8e8 !important;
+            padding: 12px 16px !important;
+            text-align: left !important;
+            line-height: 1.6 !important;
+            display: table-cell !important;
+        }
+        
+        .markdown-content table th {
+            background: #f5f5f5 !important;
+            font-weight: 600 !important;
+            color: #262626 !important;
+            text-align: center !important;
+            border-bottom: 2px solid #e8e8e8 !important;
+        }
+        
+        .markdown-content table td {
+            text-align: left !important;
+            color: #333 !important;
+        }
+        
+        .markdown-content table tr {
+            display: table-row !important;
+        }
+        
+        .markdown-content table thead {
+            display: table-header-group !important;
+        }
+        
+        .markdown-content table tbody {
+            display: table-row-group !important;
+        }
+        
+        .markdown-content table tr:nth-child(even) {
+            background: #fafafa !important;
+        }
+        
+        .markdown-content table tr:nth-child(odd) {
+            background: #fff !important;
+        }
+        
+        .markdown-content table tr:hover {
+            background: #f0f7ff !important;
+            transition: background 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>表格样式测试</h1>
+        
+        <h2>使用 table-container 类的表格</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>功能</th>
+                        <th>描述</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>问答系统</td>
+                        <td>回答学习相关问题</td>
+                        <td>✅ 可用</td>
+                    </tr>
+                    <tr>
+                        <td>学习计划</td>
+                        <td>生成个性化学习计划</td>
+                        <td>✅ 可用</td>
+                    </tr>
+                    <tr>
+                        <td>学习总结</td>
+                        <td>生成学习总结报告</td>
+                        <td>✅ 可用</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <h2>使用 markdown-content 类的表格</h2>
+        <div class="markdown-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>功能</th>
+                        <th>描述</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>问答系统</td>
+                        <td>回答学习相关问题</td>
+                        <td>✅ 可用</td>
+                    </tr>
+                    <tr>
+                        <td>学习计划</td>
+                        <td>生成个性化学习计划</td>
+                        <td>✅ 可用</td>
+                    </tr>
+                    <tr>
+                        <td>学习总结</td>
+                        <td>生成学习总结报告</td>
+                        <td>✅ 可用</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <h2>样式验证清单</h2>
+        <ul>
+            <li>表格边框：1px solid #e8e8e8</li>
+            <li>表头背景：#f5f5f5</li>
+            <li>表头文字：居中对齐，粗体</li>
+            <li>单元格内边距：12px 16px</li>
+            <li>奇偶行背景色：偶数行 #fafafa，奇数行 #fff</li>
+            <li>悬停效果：背景变为 #f0f7ff</li>
+        </ul>
+    </div>
+</body>
+</html>

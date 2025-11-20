@@ -1,0 +1,339 @@
+/* 全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-color: #f5f5f5;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 布局样式 */
+.app-layout {
+  min-height: 100vh;
+}
+
+.app-header {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.app-logo {
+  font-size: 20px;
+  font-weight: bold;
+  color: #1890ff;
+}
+
+.app-content {
+  padding: 24px;
+  background: #f5f5f5;
+  min-height: calc(100vh - 64px);
+}
+
+/* 卡片样式 */
+.page-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.page-card-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.page-card-content {
+  padding: 24px;
+}
+
+/* 表格样式 */
+.table-toolbar {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 表单样式 */
+.form-section {
+  margin-bottom: 24px;
+}
+
+.form-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* 题目卡片样式 */
+.question-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.question-card-header {
+  background: #fafafa;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.question-card-title {
+  font-weight: 600;
+  color: #262626;
+}
+
+.question-card-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.question-card-content {
+  padding: 16px;
+}
+
+.question-options {
+  margin-top: 12px;
+}
+
+.question-option {
+  padding: 8px 12px;
+  margin: 4px 0;
+  background: #f9f9f9;
+  border-radius: 4px;
+  border-left: 3px solid #d9d9d9;
+}
+
+.question-option.correct {
+  background: #f6ffed;
+  border-left-color: #52c41a;
+}
+
+.question-option.selected {
+  background: #e6f7ff;
+  border-left-color: #1890ff;
+}
+
+/* 考试界面样式 */
+.exam-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.exam-header {
+  background: #1890ff;
+  color: #fff;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.exam-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.exam-timer {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.exam-content {
+  padding: 24px;
+}
+
+.exam-question {
+  margin-bottom: 32px;
+}
+
+.exam-question-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.exam-question-options {
+  margin-top: 16px;
+}
+
+.exam-question-option {
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: #f9f9f9;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.exam-question-option:hover {
+  background: #e6f7ff;
+  border-color: #91d5ff;
+}
+
+.exam-question-option.selected {
+  background: #e6f7ff;
+  border-color: #1890ff;
+}
+
+.exam-question-option.correct {
+  background: #f6ffed;
+  border-color: #52c41a;
+}
+
+.exam-question-option.incorrect {
+  background: #fff2f0;
+  border-color: #ff4d4f;
+}
+
+.exam-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #fafafa;
+  border-top: 1px solid #f0f0f0;
+}
+
+.exam-progress {
+  font-size: 14px;
+  color: #8c8c8c;
+}
+
+/* 统计样式 */
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.statistics-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.statistics-card-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: #1890ff;
+  margin-bottom: 8px;
+}
+
+.statistics-card-label {
+  font-size: 14px;
+  color: #8c8c8c;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .app-content {
+    padding: 16px;
+  }
+  
+  .page-card-content {
+    padding: 16px;
+  }
+  
+  .table-toolbar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .table-actions {
+    justify-content: center;
+  }
+  
+  .exam-container {
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  .exam-content {
+    padding: 16px;
+  }
+  
+  .statistics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 动画效果 */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+

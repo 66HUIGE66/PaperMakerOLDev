@@ -1,0 +1,127 @@
+/* 试卷详情页面样式 */
+.paper-detail-container {
+  padding: 24px;
+}
+
+/* 表格行样式 */
+.table-row-light {
+  background-color: #fafafa;
+}
+
+.table-row-dark {
+  background-color: #ffffff;
+}
+
+/* 统计卡片悬停效果 */
+.statistic-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* 题目信息卡片 */
+.question-info-card {
+  border-left: 4px solid #1890ff;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+/* 操作按钮组 */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 题目标签样式 */
+.question-tag {
+  margin: 2px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* 进度条样式 */
+.progress-bar {
+  margin-top: 8px;
+}
+
+/* 空状态样式 */
+.empty-state {
+  padding: 40px 0;
+  text-align: center;
+}
+
+/* 筛选器样式 */
+.filter-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+/* 题目选择器样式 */
+.question-selector {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .paper-detail-container {
+    padding: 16px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .statistic-card {
+    margin-bottom: 16px;
+  }
+}
+
+/* 加载状态样式 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* 成功状态样式 */
+.success-message {
+  color: #52c41a;
+  font-weight: 500;
+}
+
+/* 警告状态样式 */
+.warning-message {
+  color: #fa8c16;
+  font-weight: 500;
+}
+
+/* 错误状态样式 */
+.error-message {
+  color: #ff4d4f;
+  font-weight: 500;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
