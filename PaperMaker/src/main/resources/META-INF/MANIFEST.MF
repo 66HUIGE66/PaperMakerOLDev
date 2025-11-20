@@ -1,0 +1,61 @@
+Manifest-Version: 1.0
+Main-Class: org.example.papermaker.PaperMakerApplication
+Class-Path: langchain4j-http-client-1.3.0.jar mybatis-plus-extension-3.5
+ .9.jar classmate-1.7.0.jar spring-boot-actuator-autoconfigure-3.4.0.jar
+  hibernate-validator-8.0.1.Final.jar spring-boot-starter-reactor-netty-
+ 3.4.0.jar langchain4j-open-ai-1.3.0.jar HikariCP-5.1.0.jar mybatis-plus
+ -spring-3.5.9.jar mybatis-spring-3.0.4.jar jakarta.xml.bind-api-4.0.2.j
+ ar netty-codec-dns-4.1.115.Final.jar spring-boot-starter-jdbc-3.4.0.jar
+  LatencyUtils-2.0.3.jar tomcat-embed-core-10.1.33.jar mybatis-plus-spri
+ ng-boot3-starter-3.5.9.jar spring-expression-6.2.0.jar netty-transport-
+ 4.1.115.Final.jar langchain4j-reactor-1.3.0-beta9.jar micrometer-common
+ s-1.14.1.jar netty-resolver-dns-4.1.115.Final.jar spring-boot-starter-l
+ ogging-3.4.0.jar jjwt-impl-0.11.5.jar spring-jdbc-6.2.0.jar netty-resol
+ ver-dns-classes-macos-4.1.115.Final.jar netty-handler-4.1.115.Final.jar
+  spring-boot-starter-3.4.0.jar commons-math3-3.6.1.jar spring-context-6
+ .2.0.jar snakeyaml-2.3.jar spring-webflux-6.2.0.jar spring-boot-actuato
+ r-3.4.0.jar swagger-core-jakarta-2.2.15.jar netty-handler-proxy-4.1.115
+ .Final.jar curvesapi-1.07.jar commons-lang3-3.17.0.jar jakarta.validati
+ on-api-3.0.2.jar spring-data-commons-3.4.0.jar spring-boot-starter-webf
+ lux-3.4.0.jar mybatis-plus-core-3.5.9.jar SparseBitSet-1.2.jar mybatis-
+ plus-jsqlparser-common-3.5.9.jar jsqlparser-5.0.jar commons-io-2.11.0.j
+ ar commons-compress-1.21.jar springdoc-openapi-starter-webmvc-api-2.2.0
+ .jar HdrHistogram-2.2.2.jar commons-collections4-4.4.jar logback-classi
+ c-1.5.12.jar spring-context-support-6.2.0.jar poi-5.2.3.jar tomcat-embe
+ d-websocket-10.1.33.jar lettuce-core-6.4.1.RELEASE.jar lombok-1.18.36.j
+ ar jackson-module-parameter-names-2.18.1.jar opennlp-tools-2.5.4.jar my
+ batis-plus-3.5.9.jar spring-beans-6.2.0.jar commons-codec-1.17.1.jar sp
+ ring-boot-starter-data-redis-3.4.0.jar jjwt-jackson-0.11.5.jar jakarta.
+ activation-api-2.1.3.jar micrometer-jakarta9-1.14.1.jar spring-boot-sta
+ rter-validation-3.4.0.jar jjwt-api-0.11.5.jar mybatis-plus-jsqlparser-3
+ .5.9.jar langchain4j-http-client-spring-restclient-1.3.0-beta9.jar lang
+ chain4j-open-ai-spring-boot-starter-1.3.0-beta9.jar jboss-logging-3.6.1
+ .Final.jar tomcat-embed-el-10.1.33.jar netty-transport-native-epoll-4.1
+ .115.Final-linux-x86_64.jar reactive-streams-1.0.4.jar langchain4j-1.3.
+ 0.jar spring-boot-starter-json-3.4.0.jar spring-tx-6.2.0.jar netty-code
+ c-http2-4.1.115.Final.jar netty-codec-4.1.115.Final.jar jakarta.annotat
+ ion-api-2.1.1.jar jackson-datatype-jdk8-2.18.1.jar log4j-api-2.24.1.jar
+  springdoc-openapi-starter-common-2.2.0.jar spring-data-redis-3.4.0.jar
+  micrometer-observation-1.14.1.jar poi-scratchpad-5.2.3.jar reactor-cor
+ e-3.7.0.jar netty-resolver-4.1.115.Final.jar netty-transport-classes-ep
+ oll-4.1.115.Final.jar spring-jcl-6.2.0.jar netty-codec-socks-4.1.115.Fi
+ nal.jar jackson-core-2.18.1.jar netty-transport-native-unix-common-4.1.
+ 115.Final.jar swagger-annotations-jakarta-2.2.15.jar spring-data-keyval
+ ue-3.4.0.jar spring-boot-starter-actuator-3.4.0.jar jackson-datatype-js
+ r310-2.18.1.jar logback-core-1.5.12.jar mysql-connector-j-9.1.0.jar hut
+ ool-core-5.8.16.jar spring-boot-autoconfigure-3.4.0.jar reactor-netty-h
+ ttp-1.2.0.jar spring-aop-6.2.0.jar jtokkit-1.1.0.jar netty-common-4.1.1
+ 15.Final.jar poi-ooxml-lite-5.2.3.jar spring-boot-starter-web-3.4.0.jar
+  mybatis-plus-annotation-3.5.9.jar swagger-models-jakarta-2.2.15.jar lo
+ g4j-to-slf4j-2.24.1.jar reactor-netty-core-1.2.0.jar jspecify-1.0.0.jar
+  netty-codec-http-4.1.115.Final.jar swagger-ui-5.2.0.jar spring-boot-3.
+ 4.0.jar langchain4j-spring-boot-starter-1.3.0-beta9.jar slf4j-api-2.0.1
+ 6.jar spring-core-6.2.0.jar jackson-dataformat-yaml-2.18.1.jar springdo
+ c-openapi-starter-webmvc-ui-2.2.0.jar micrometer-core-1.14.1.jar spring
+ -oxm-6.2.0.jar jackson-annotations-2.18.1.jar jul-to-slf4j-2.0.16.jar n
+ etty-resolver-dns-native-macos-4.1.115.Final-osx-x86_64.jar spring-webm
+ vc-6.2.0.jar mybatis-3.5.16.jar poi-ooxml-5.2.3.jar jackson-databind-2.
+ 18.1.jar langchain4j-core-1.3.0.jar spring-web-6.2.0.jar netty-buffer-4
+ .1.115.Final.jar mybatis-plus-spring-boot-autoconfigure-3.5.9.jar xmlbe
+ ans-5.1.1.jar spring-boot-starter-tomcat-3.4.0.jar
+

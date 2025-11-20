@@ -1,0 +1,20 @@
+langchain4j:
+  open-ai:
+    chat-model:
+      base-url: https://api.siliconflow.cn
+      api-key: ${API-KEY}
+      model-name: Qwen/Qwen2.5-7B-Instruct
+      log-requests: true
+      log-responses: true
+    streaming-chat-model:
+      base-url: https://api.siliconflow.cn
+      api-key: ${API-KEY}
+      model-name: Qwen/Qwen2.5-7B-Instruct
+      log-requests: true
+      log-responses: true
+logging:
+  level:
+    dev.langchain4j: debug
+    dev.langchain4j.rag: debug
+    dev.langchain4j.retrieval: debug
+    dev.langchain4j.embedding: debug
