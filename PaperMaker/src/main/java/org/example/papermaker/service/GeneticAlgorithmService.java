@@ -68,11 +68,11 @@ public class GeneticAlgorithmService {
      * 使用遗传算法生成试卷
      */
     public List<QuestionEntity> generatePaperByGA(PaperRule rule, List<QuestionEntity> allQuestions) {
-        log.info("开始遗传算法组卷 - 题库总数: {}, 需要题目数: {}", allQuestions.size(), rule.getTotalQuestionCount());
+
         
         //  筛选题目（按学科和知识点）
         filterQuestions(rule, allQuestions);
-        
+        log.info("开始遗传算法组卷 - 题库总数: {}, 需要题目数: {}", allQuestions.size(), rule.getTotalQuestionCount());
         // 1. 初始化种群
         List<Individual> population = initializePopulation(rule, filteredQuestions);
         log.debug("初始种群大小: {}", population.size());

@@ -1,0 +1,41 @@
+langchain4j:
+  open-ai:
+    chat-model:
+      base-url: https://api.siliconflow.cn
+      api-key: ${API-KEY:}
+      model-name: Qwen/Qwen2.5-7B-Instruct
+      log-requests: true
+      log-responses: true
+    streaming-chat-model:
+      base-url: https://api.siliconflow.cn
+      api-key: ${API-KEY:}
+      model-name: Qwen/Qwen2.5-7B-Instruct
+      log-requests: true
+      log-responses: true
+logging:
+  level:
+    dev.langchain4j: debug
+    dev.langchain4j.rag: debug
+    dev.langchain4j.retrieval: debug
+    dev.langchain4j.embedding: debug
+    com.baomidou.mybatisplus: DEBUG
+    org.example.papermaker.mapper: debug
+server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/sepgdb?useUnicode=true&characterEncoding=utf-8
+    username: root
+    password: 123456
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 10000ms
+
+# JWT配置
+jwt:
+  secret: PaperMakerSecretKeyForJWTTokenGeneration2025
