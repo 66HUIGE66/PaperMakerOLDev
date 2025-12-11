@@ -27,7 +27,9 @@ public class GeneticAlgorithmService {
     private static final double CROSSOVER_RATE = 0.8;   // 交叉概率
     private static final double MUTATION_RATE = 0.1;    // 变异概率
     private static final double ELITE_RATE = 0.1;       // 精英保留比例
-    
+    private static final long MAX_COMPUTATION_TIME = 4500; // 最大计算时间(ms)，留500ms缓冲
+    private static final int MAX_STAGNATION_GENERATIONS = 30; // 最大停滞代数
+
     // 存储筛选后的题目（用于变异操作，避免重复筛选）
     private List<QuestionEntity> filteredQuestions = new ArrayList<>();
     
@@ -68,11 +70,12 @@ public class GeneticAlgorithmService {
      * 使用遗传算法生成试卷
      */
     public List<QuestionEntity> generatePaperByGA(PaperRule rule, List<QuestionEntity> allQuestions) {
-
+        long startTime = System.currentTimeMillis();
+        log.info("开始遗传算法组卷 - 题库总数: {}, 需要题目数: {}", allQuestions.size(), rule.getTotalQuestionCount());
         
         //  筛选题目（按学科和知识点）
         filterQuestions(rule, allQuestions);
-        log.info("开始遗传算法组卷 - 题库总数: {}, 需要题目数: {}", allQuestions.size(), rule.getTotalQuestionCount());
+        
         // 1. 初始化种群
         List<Individual> population = initializePopulation(rule, filteredQuestions);
         log.debug("初始种群大小: {}", population.size());
@@ -80,27 +83,44 @@ public class GeneticAlgorithmService {
         // 2. 迭代进化
         Individual bestIndividual = null;
         double bestFitness = 0.0;
+        int stagnationCounter = 0; // 停滞计数器
         
         for (int generation = 0; generation < MAX_GENERATIONS; generation++) {
-            // 计算适应度
-            for (Individual individual : population) {
+            // 检查超时
+            if (System.currentTimeMillis() - startTime > MAX_COMPUTATION_TIME) {
+                log.warn("遗传算法计算超时 ({}ms)，提前返回当前最优解", System.currentTimeMillis() - startTime);
+                break;
+            }
+
+            // 计算适应度 (并行计算优化)
+            population.parallelStream().forEach(individual -> {
                 double fitness = calculateFitness(individual, rule);
                 individual.setFitness(fitness);
-            }
+            });
             
             // 排序（适应度从高到低）
             population.sort((a, b) -> Double.compare(b.getFitness(), a.getFitness()));
             
             // 记录最优个体
-            if (population.get(0).getFitness() > bestFitness) {
-                bestFitness = population.get(0).getFitness();
+            double currentBestFitness = population.get(0).getFitness();
+            if (currentBestFitness > bestFitness) {
+                bestFitness = currentBestFitness;
                 bestIndividual = population.get(0).clone();
+                stagnationCounter = 0; // 重置停滞计数
                 log.debug("第{}代 - 最优适应度: {:.4f}", generation, bestFitness);
+            } else {
+                stagnationCounter++;
             }
             
             // 如果适应度足够高，提前结束
-            if (bestFitness >= 0.95) {
-                log.info("找到高质量解，提前结束");
+            if (bestFitness >= 0.98) {
+                log.info("找到高质量解 (适应度 >= 0.98)，提前结束");
+                break;
+            }
+
+            // 检查停滞
+            if (stagnationCounter >= MAX_STAGNATION_GENERATIONS) {
+                log.info("遗传算法陷入局部最优 ({}代无提升)，提前结束", MAX_STAGNATION_GENERATIONS);
                 break;
             }
             
@@ -138,7 +158,8 @@ public class GeneticAlgorithmService {
             population = newPopulation;
         }
         
-        log.info("遗传算法结束 - 最终适应度: {:.4f}, 选中题目数: {}", 
+        log.info("遗传算法结束 - 耗时: {}ms, 最终适应度: {:.4f}, 选中题目数: {}", 
+            System.currentTimeMillis() - startTime,
             bestFitness, bestIndividual != null ? bestIndividual.getQuestions().size() : 0);
         
         return bestIndividual != null ? bestIndividual.getQuestions() : new ArrayList<>();
@@ -277,33 +298,74 @@ public class GeneticAlgorithmService {
         double fitness = 0.0;
         double totalWeight = 0.0;
         
-        // 1. 题目数量匹配度（权重30%）
-        double countWeight = 0.3;
+        // 1. 题目数量匹配度（权重20%）
+        double countWeight = 0.2;
         int expectedCount = rule.getTotalQuestionCount();
         int actualCount = questions.size();
         double countScore = 1.0 - Math.abs(expectedCount - actualCount) / (double) Math.max(expectedCount, 1);
         fitness += countScore * countWeight;
         totalWeight += countWeight;
         
-        // 2. 题型分布匹配度（权重30%）
-        double typeWeight = 0.3;
+        // 2. 题型分布匹配度（权重20%）
+        double typeWeight = 0.2;
         double typeScore = calculateTypeMatchScore(questions, rule);
         fitness += typeScore * typeWeight;
         totalWeight += typeWeight;
         
-        // 3. 难度分布匹配度（权重25%）
-        double difficultyWeight = 0.25;
+        // 3. 难度分布匹配度（权重20%）
+        double difficultyWeight = 0.2;
         double difficultyScore = calculateDifficultyMatchScore(questions, rule);
         fitness += difficultyScore * difficultyWeight;
         totalWeight += difficultyWeight;
         
-        // 4. 学科相关性（权重15%）
-        double subjectWeight = 0.15;
+        // 4. 学科相关性（权重10%）
+        double subjectWeight = 0.1;
         double subjectScore = calculateSubjectRelevanceScore(questions, rule);
         fitness += subjectScore * subjectWeight;
         totalWeight += subjectWeight;
+
+        // 5. 知识点覆盖率（权重30%）
+        double knowledgeWeight = 0.3;
+        double knowledgeScore = calculateKnowledgeCoverageScore(questions, rule);
+        fitness += knowledgeScore * knowledgeWeight;
+        totalWeight += knowledgeWeight;
         
         return totalWeight > 0 ? fitness / totalWeight : 0.0;
+    }
+
+    /**
+     * 计算知识点覆盖率分数
+     */
+    private double calculateKnowledgeCoverageScore(List<QuestionEntity> questions, PaperRule rule) {
+        Map<String, Float> requiredPoints = rule.getKnowledgePointNames();
+        if (requiredPoints == null || requiredPoints.isEmpty()) {
+            return 1.0;
+        }
+
+        // 统计试卷中覆盖的知识点
+        Set<String> coveredPoints = new HashSet<>();
+        for (QuestionEntity q : questions) {
+            String title = q.getTitle().toLowerCase();
+            for (String kpName : requiredPoints.keySet()) {
+                if (title.contains(kpName.toLowerCase())) {
+                    coveredPoints.add(kpName);
+                }
+            }
+        }
+        
+        // 计算覆盖权重
+        double totalRequiredWeight = 0.0;
+        double coveredWeight = 0.0;
+
+        for (Map.Entry<String, Float> entry : requiredPoints.entrySet()) {
+            float weight = entry.getValue() != null ? entry.getValue() : 1.0f;
+            totalRequiredWeight += weight;
+            if (coveredPoints.contains(entry.getKey())) {
+                coveredWeight += weight;
+            }
+        }
+
+        return totalRequiredWeight > 0 ? coveredWeight / totalRequiredWeight : 1.0;
     }
     
     /**
