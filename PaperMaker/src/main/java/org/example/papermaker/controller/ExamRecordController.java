@@ -28,12 +28,12 @@ import java.util.Map;
 @RequestMapping("/exam-record")
 @Tag(name = "练习记录管理", description = "练习记录的增删改查操作")
 public class ExamRecordController {
-    
+
     private static final Logger log = LoggerFactory.getLogger(ExamRecordController.class);
-    
+
     @Resource
     private ExamRecordService examRecordService;
-    
+
     /**
      * 获取当前用户的练习记录
      */
@@ -47,18 +47,18 @@ public class ExamRecordController {
     public RespBean getMyRecords() {
         try {
             Long currentUserId = SimpleUserContext.getCurrentUserId();
-            
+
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             List<ExamRecordEntity> records = examRecordService.getRecordsByUserId(currentUserId);
             return new RespBean(200, "查询成功", records);
         } catch (Exception e) {
             return new RespBean(500, "查询失败: " + e.getMessage(), null);
         }
     }
-    
+
     /**
      * 根据状态获取练习记录
      */
@@ -70,14 +70,13 @@ public class ExamRecordController {
             @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     public RespBean getMyRecordsByStatus(
-            @Parameter(description = "记录状态", required = true, example = "COMPLETED")
-            @PathVariable String status) {
+            @Parameter(description = "记录状态", required = true, example = "COMPLETED") @PathVariable String status) {
         try {
             Long currentUserId = SimpleUserContext.getCurrentUserId();
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             ExamRecordEntity.ExamStatus examStatus = ExamRecordEntity.ExamStatus.valueOf(status);
             List<ExamRecordEntity> records = examRecordService.getRecordsByUserIdAndStatus(currentUserId, examStatus);
             return new RespBean(200, "查询成功", records);
@@ -85,7 +84,7 @@ public class ExamRecordController {
             return new RespBean(500, "查询失败: " + e.getMessage(), null);
         }
     }
-    
+
     /**
      * 根据类型获取练习记录
      */
@@ -97,14 +96,13 @@ public class ExamRecordController {
             @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     public RespBean getMyRecordsByType(
-            @Parameter(description = "记录类型", required = true, example = "PRACTICE")
-            @PathVariable String type) {
+            @Parameter(description = "记录类型", required = true, example = "PRACTICE") @PathVariable String type) {
         try {
             Long currentUserId = SimpleUserContext.getCurrentUserId();
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             ExamRecordEntity.ExamType examType = ExamRecordEntity.ExamType.valueOf(type);
             List<ExamRecordEntity> records = examRecordService.getRecordsByUserIdAndType(currentUserId, examType);
             return new RespBean(200, "查询成功", records);
@@ -112,7 +110,7 @@ public class ExamRecordController {
             return new RespBean(500, "查询失败: " + e.getMessage(), null);
         }
     }
-    
+
     /**
      * 根据ID获取练习记录详情
      */
@@ -126,24 +124,23 @@ public class ExamRecordController {
             @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     public RespBean getRecordById(
-            @Parameter(description = "记录ID", required = true, example = "1")
-            @PathVariable Long id) {
+            @Parameter(description = "记录ID", required = true, example = "1") @PathVariable Long id) {
         try {
             Long currentUserId = SimpleUserContext.getCurrentUserId();
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             ExamRecordEntity record = examRecordService.getById(id);
             if (record == null) {
                 return new RespBean(404, "记录不存在", null);
             }
-            
+
             // 验证记录是否属于当前用户
             if (!record.getUserId().equals(currentUserId)) {
                 return new RespBean(403, "无权访问该记录", null);
             }
-            
+
             return new RespBean(200, "查询成功", record);
         } catch (Exception e) {
             return new RespBean(500, "查询失败: " + e.getMessage(), null);
@@ -166,14 +163,14 @@ public class ExamRecordController {
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             Map<String, Object> statistics = examRecordService.getStatisticsByUserId(currentUserId);
             return new RespBean(200, "查询成功", statistics);
         } catch (Exception e) {
             return new RespBean(500, "查询失败: " + e.getMessage(), null);
         }
     }
-    
+
     /**
      * 获取总体练习情况统计（
      */
@@ -190,7 +187,7 @@ public class ExamRecordController {
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             Map<String, Object> statistics = examRecordService.getOverallStatistics(currentUserId);
             return new RespBean(200, "查询成功", statistics);
         } catch (Exception e) {
@@ -198,7 +195,7 @@ public class ExamRecordController {
             return new RespBean(500, "查询失败: " + e.getMessage(), null);
         }
     }
-    
+
     /**
      * 获取学科分类练习情况统计
      */
@@ -215,7 +212,7 @@ public class ExamRecordController {
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             Map<String, Object> statistics = examRecordService.getSubjectStatistics(currentUserId);
             return new RespBean(200, "查询成功", statistics);
         } catch (Exception e) {
@@ -223,7 +220,7 @@ public class ExamRecordController {
             return new RespBean(500, "查询失败: " + e.getMessage(), null);
         }
     }
-    
+
     /**
      * 获取学科知识点学习情况统计
      */
@@ -240,7 +237,7 @@ public class ExamRecordController {
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             Map<String, Object> statistics = examRecordService.getSubjectKnowledgePointStatistics(currentUserId);
             return new RespBean(200, "查询成功", statistics);
         } catch (Exception e) {
@@ -248,7 +245,32 @@ public class ExamRecordController {
             return new RespBean(500, "查询失败: " + e.getMessage(), null);
         }
     }
-    
+
+    /**
+     * 获取我的错题集
+     */
+    @GetMapping("/wrong-questions")
+    @Operation(summary = "获取我的错题集", description = "获取当前用户的错题列表，按错误次数排序")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "401", description = "用户未登录"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public RespBean getWrongQuestions() {
+        try {
+            Long currentUserId = SimpleUserContext.getCurrentUserId();
+            if (currentUserId == null) {
+                return new RespBean(401, "用户未登录", null);
+            }
+
+            List<Map<String, Object>> wrongQuestions = examRecordService.getWrongQuestions(currentUserId);
+            return new RespBean(200, "查询成功", wrongQuestions);
+        } catch (Exception e) {
+            log.error("获取错题集失败", e);
+            return new RespBean(500, "查询失败: " + e.getMessage(), null);
+        }
+    }
+
     /**
      * 创建练习记录
      */
@@ -261,24 +283,23 @@ public class ExamRecordController {
             @ApiResponse(responseCode = "500", description = "创建失败")
     })
     public RespBean createRecord(
-            @Parameter(description = "练习记录信息", required = true)
-            @RequestBody ExamRecordEntity record) {
+            @Parameter(description = "练习记录信息", required = true) @RequestBody ExamRecordEntity record) {
         try {
             Long currentUserId = SimpleUserContext.getCurrentUserId();
-            
+
             log.info("创建练习记录 - 用户ID: {}, 试卷ID: {}", currentUserId, record.getPaperId());
-            
+
             // 如果上下文中没有用户ID，尝试从请求体中获取
             if (currentUserId == null) {
                 currentUserId = record.getUserId();
                 log.info("从请求体获取用户ID: {}", currentUserId);
             }
-            
+
             if (currentUserId == null) {
                 log.warn("用户ID为空，返回未登录错误");
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             // 设置用户ID和学生ID
             record.setUserId(currentUserId);
             if (record.getStudentId() == null) {
@@ -296,7 +317,7 @@ public class ExamRecordController {
             return new RespBean(500, "创建失败: " + e.getMessage(), null);
         }
     }
-    
+
     /**
      * 更新练习记录
      */
@@ -309,20 +330,19 @@ public class ExamRecordController {
             @ApiResponse(responseCode = "500", description = "更新失败")
     })
     public RespBean updateRecord(
-            @Parameter(description = "练习记录信息", required = true)
-            @RequestBody ExamRecordEntity record) {
+            @Parameter(description = "练习记录信息", required = true) @RequestBody ExamRecordEntity record) {
         try {
             Long currentUserId = SimpleUserContext.getCurrentUserId();
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             // 验证记录是否属于当前用户
             ExamRecordEntity existingRecord = examRecordService.getById(record.getId());
             if (existingRecord == null || !existingRecord.getUserId().equals(currentUserId)) {
                 return new RespBean(403, "无权访问该记录", null);
             }
-            
+
             boolean success = examRecordService.updateRecord(record);
             if (success) {
                 return new RespBean(200, "更新成功", record);
@@ -348,15 +368,22 @@ public class ExamRecordController {
 
             Long recordId = body.get("recordId") instanceof Number ? ((Number) body.get("recordId")).longValue() : null;
             Long paperId = body.get("paperId") instanceof Number ? ((Number) body.get("paperId")).longValue() : null;
-            Integer answered = body.get("answeredQuestions") instanceof Number ? ((Number) body.get("answeredQuestions")).intValue() : null;
-            Integer total = body.get("totalQuestions") instanceof Number ? ((Number) body.get("totalQuestions")).intValue() : null;
-            Long timeSpent = body.get("timeSpent") instanceof Number ? ((Number) body.get("timeSpent")).longValue() : null;
+            Integer answered = body.get("answeredQuestions") instanceof Number
+                    ? ((Number) body.get("answeredQuestions")).intValue()
+                    : null;
+            Integer total = body.get("totalQuestions") instanceof Number
+                    ? ((Number) body.get("totalQuestions")).intValue()
+                    : null;
+            Long timeSpent = body.get("timeSpent") instanceof Number ? ((Number) body.get("timeSpent")).longValue()
+                    : null;
 
             ExamRecordEntity rec;
             if (recordId != null) {
                 rec = examRecordService.getById(recordId);
-                if (rec == null) return new RespBean(404, "记录不存在", null);
-                if (!rec.getUserId().equals(currentUserId)) return new RespBean(403, "无权访问该记录", null);
+                if (rec == null)
+                    return new RespBean(404, "记录不存在", null);
+                if (!rec.getUserId().equals(currentUserId))
+                    return new RespBean(403, "无权访问该记录", null);
             } else {
                 rec = new ExamRecordEntity();
                 rec.setUserId(currentUserId);
@@ -368,9 +395,12 @@ public class ExamRecordController {
                 examRecordService.save(rec);
             }
 
-            if (answered != null) rec.setAnsweredQuestions(answered);
-            if (total != null) rec.setTotalQuestions(total);
-            if (timeSpent != null) rec.setTimeSpent(timeSpent.intValue());
+            if (answered != null)
+                rec.setAnsweredQuestions(answered);
+            if (total != null)
+                rec.setTotalQuestions(total);
+            if (timeSpent != null)
+                rec.setTimeSpent(timeSpent.intValue());
             rec.setStatus(ExamRecordEntity.ExamStatus.IN_PROGRESS);
             rec.setUpdatedAt(java.time.LocalDateTime.now());
             examRecordService.updateById(rec);
@@ -392,7 +422,8 @@ public class ExamRecordController {
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            List<ExamRecordEntity> list = examRecordService.getRecordsByUserIdAndStatus(currentUserId, ExamRecordEntity.ExamStatus.IN_PROGRESS);
+            List<ExamRecordEntity> list = examRecordService.getRecordsByUserIdAndStatus(currentUserId,
+                    ExamRecordEntity.ExamStatus.IN_PROGRESS);
             if (paperId != null) {
                 list = list.stream().filter(r -> paperId.equals(r.getPaperId())).toList();
             }
@@ -402,7 +433,7 @@ public class ExamRecordController {
             return new RespBean(500, "查询失败: " + e.getMessage(), null);
         }
     }
-    
+
     /**
      * 删除练习记录
      */
@@ -415,20 +446,19 @@ public class ExamRecordController {
             @ApiResponse(responseCode = "500", description = "删除失败")
     })
     public RespBean deleteRecord(
-            @Parameter(description = "记录ID", required = true, example = "1")
-            @PathVariable Long id) {
+            @Parameter(description = "记录ID", required = true, example = "1") @PathVariable Long id) {
         try {
             Long currentUserId = SimpleUserContext.getCurrentUserId();
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             // 验证记录是否属于当前用户
             ExamRecordEntity existingRecord = examRecordService.getById(id);
             if (existingRecord == null || !existingRecord.getUserId().equals(currentUserId)) {
                 return new RespBean(403, "无权访问该记录", null);
             }
-            
+
             boolean success = examRecordService.deleteRecord(id);
             if (success) {
                 return new RespBean(200, "删除成功", null);
@@ -439,7 +469,7 @@ public class ExamRecordController {
             return new RespBean(500, "删除失败: " + e.getMessage(), null);
         }
     }
-    
+
     /**
      * 搜索练习记录
      */
@@ -451,32 +481,32 @@ public class ExamRecordController {
             @ApiResponse(responseCode = "500", description = "查询失败")
     })
     public RespBean searchRecords(
-            @Parameter(description = "搜索条件", required = true)
-            @RequestBody Map<String, Object> searchParams) {
+            @Parameter(description = "搜索条件", required = true) @RequestBody Map<String, Object> searchParams) {
         try {
             Long currentUserId = SimpleUserContext.getCurrentUserId();
             if (currentUserId == null) {
                 return new RespBean(401, "用户未登录", null);
             }
-            
+
             String paperTitle = (String) searchParams.get("paperTitle");
             String statusStr = (String) searchParams.get("status");
             String typeStr = (String) searchParams.get("type");
             String subjectId = (String) searchParams.get("subjectId");
             String startDate = (String) searchParams.get("startDate");
             String endDate = (String) searchParams.get("endDate");
-            
+
             ExamRecordEntity.ExamStatus status = null;
             if (statusStr != null && !statusStr.equals("ALL")) {
                 status = ExamRecordEntity.ExamStatus.valueOf(statusStr);
             }
-            
+
             ExamRecordEntity.ExamType type = null;
             if (typeStr != null && !typeStr.equals("ALL")) {
                 type = ExamRecordEntity.ExamType.valueOf(typeStr);
             }
 
-            List<ExamRecordEntity> records = examRecordService.searchRecords(currentUserId, paperTitle, status, type, subjectId, startDate, endDate);
+            List<ExamRecordEntity> records = examRecordService.searchRecords(currentUserId, paperTitle, status, type,
+                    subjectId, startDate, endDate);
             return new RespBean(200, "查询成功", records);
         } catch (Exception e) {
             return new RespBean(500, "查询失败: " + e.getMessage(), null);

@@ -1,31 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Button, 
-  Select, 
-  InputNumber, 
-  Typography, 
-  Space, 
-  Tag, 
+import {
+  Card,
+  Row,
+  Col,
+  Button,
+  Select,
+  InputNumber,
+  Typography,
+  Space,
+  Tag,
   Progress,
   Modal,
   Radio,
   message,
   Divider,
-  Statistic
+  Statistic,
+  Input
 } from 'antd';
-import { 
-  PlayCircleOutlined, 
-  TrophyOutlined, 
+import {
+  PlayCircleOutlined,
+  TrophyOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
+import AIGradingResult from '../components/AIGradingResult';
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 const { Option } = Select;
 
 interface PracticeSession {
@@ -48,6 +51,10 @@ interface Question {
   options?: Array<{ key: string; content: string }>;
   correctAnswer: string;
   explanation: string;
+  // AI评分相关字段
+  aiScore?: number;
+  aiFeedback?: string;
+  aiSuggestions?: string;
 }
 
 const SimplifiedPractice: React.FC = () => {
@@ -86,19 +93,13 @@ const SimplifiedPractice: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // 模拟加载当前题目
+    // 模拟加载当前题目 - 可以是填空题或简答题来测试AI评分
     const mockQuestion: Question = {
       id: 1,
-      title: 'Java中，以下哪个关键字用于定义常量？',
-      type: 'SINGLE_CHOICE',
-      options: [
-        { key: 'A', content: 'const' },
-        { key: 'B', content: 'final' },
-        { key: 'C', content: 'static' },
-        { key: 'D', content: 'define' }
-      ],
-      correctAnswer: 'B',
-      explanation: 'final关键字用于定义常量，一旦赋值后不能修改'
+      title: 'Java中用于定义常量的关键字是______。',
+      type: 'FILL_BLANK', // 改为填空题来测试AI评分
+      correctAnswer: 'final',
+      explanation: 'final关键字用于定义常量，一旦赋值后不能修改。在Java中，使用final修饰的变量称为常量。'
     };
     setCurrentQuestion(mockQuestion);
   }, []);
@@ -117,7 +118,7 @@ const SimplifiedPractice: React.FC = () => {
 
   const handleStartPractice = async () => {
     setLoading(true);
-    
+
     // 模拟开始练习
     setTimeout(() => {
       const newSession: PracticeSession = {
@@ -132,7 +133,7 @@ const SimplifiedPractice: React.FC = () => {
         status: 'IN_PROGRESS',
         startTime: new Date().toLocaleString()
       };
-      
+
       setCurrentSession(newSession);
       setPracticeModalVisible(false);
       setLoading(false);
@@ -142,21 +143,35 @@ const SimplifiedPractice: React.FC = () => {
 
   const handleSubmitAnswer = () => {
     if (!userAnswer) {
-      message.warning('请选择答案！');
+      message.warning('请输入答案！');
       return;
     }
 
-    setShowResult(true);
-    
-    // 模拟提交答案
-    setTimeout(() => {
+    // 模拟AI评分（实际应调用后端API）
+    const questionType = currentQuestion?.type;
+    const isSubjectiveQuestion = questionType === 'FILL_BLANK' || questionType === 'SHORT_ANSWER';
+
+    if (isSubjectiveQuestion) {
+      // 模拟AI评分结果
+      const mockAIGrading = {
+        aiScore: 85,
+        aiFeedback: '答案基本正确！"final"是Java中定义常量的关键字。表述准确，符合题目要求。',
+        aiSuggestions: '可以进一步补充：final关键字除了用于定义常量，还可以用于修饰方法和类，防止被重写或继承。'
+      };
+
+      setCurrentQuestion(prev => prev ? { ...prev, ...mockAIGrading } : null);
+      message.success('AI评分完成！');
+    } else {
+      // 客观题直接判断对错
       const isCorrect = userAnswer === currentQuestion?.correctAnswer;
       if (isCorrect) {
         message.success('回答正确！');
       } else {
         message.error('回答错误！');
       }
-    }, 500);
+    }
+
+    setShowResult(true);
   };
 
   const handleNextQuestion = () => {
@@ -214,9 +229,9 @@ const SimplifiedPractice: React.FC = () => {
     <div style={{ padding: '24px' }}>
       <Title level={2}>练习模式</Title>
       <Text type="secondary">多种练习模式，提升学习效果</Text>
-      
+
       <Divider />
-      
+
       {!currentSession || currentSession.status === 'COMPLETED' ? (
         // 练习选择界面
         <Row gutter={[16, 16]}>
@@ -254,7 +269,7 @@ const SimplifiedPractice: React.FC = () => {
                 <Statistic title="得分" value={currentSession.score} />
               </Col>
             </Row>
-            
+
             <div style={{ marginTop: '16px' }}>
               <Text>进度：</Text>
               <Progress percent={getProgress()} />
@@ -266,10 +281,11 @@ const SimplifiedPractice: React.FC = () => {
             {currentQuestion && (
               <div>
                 <Title level={4}>{currentQuestion.title}</Title>
-                
+
+                {/* 单选题 */}
                 {currentQuestion.type === 'SINGLE_CHOICE' && currentQuestion.options && (
-                  <Radio.Group 
-                    value={userAnswer} 
+                  <Radio.Group
+                    value={userAnswer}
                     onChange={(e) => setUserAnswer(e.target.value)}
                     style={{ width: '100%' }}
                   >
@@ -283,9 +299,10 @@ const SimplifiedPractice: React.FC = () => {
                   </Radio.Group>
                 )}
 
+                {/* 判断题 */}
                 {currentQuestion.type === 'TRUE_FALSE' && (
-                  <Radio.Group 
-                    value={userAnswer} 
+                  <Radio.Group
+                    value={userAnswer}
                     onChange={(e) => setUserAnswer(e.target.value)}
                   >
                     <Space>
@@ -295,11 +312,61 @@ const SimplifiedPractice: React.FC = () => {
                   </Radio.Group>
                 )}
 
+                {/* 填空题 */}
+                {currentQuestion.type === 'FILL_BLANK' && (
+                  <TextArea
+                    rows={2}
+                    placeholder="请输入填空题答案，多个空用分号(;)分隔"
+                    value={userAnswer}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                    disabled={showResult}
+                  />
+                )}
+
+                {/* 简答题 */}
+                {currentQuestion.type === 'SHORT_ANSWER' && (
+                  <TextArea
+                    rows={6}
+                    placeholder="请输入简答题答案"
+                    value={userAnswer}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                    disabled={showResult}
+                  />
+                )}
+
+                {/* 答案解析和AI评分 */}
                 {showResult && (
-                  <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
-                    <Title level={5}>答案解析</Title>
-                    <Text>{currentQuestion.explanation}</Text>
-                  </div>
+                  <>
+                    {/* 客观题解析 */}
+                    {currentQuestion.type !== 'FILL_BLANK' && currentQuestion.type !== 'SHORT_ANSWER' && (
+                      <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+                        <Title level={5}>答案解析</Title>
+                        <Text>{currentQuestion.explanation}</Text>
+                      </div>
+                    )}
+
+                    {/* 主观题AI评分结果 */}
+                    {(currentQuestion.type === 'FILL_BLANK' || currentQuestion.type === 'SHORT_ANSWER') &&
+                      currentQuestion.aiScore !== undefined && (
+                        <AIGradingResult
+                          score={currentQuestion.aiScore}
+                          feedback={currentQuestion.aiFeedback || ''}
+                          suggestions={currentQuestion.aiSuggestions || ''}
+                          isCorrect={currentQuestion.aiScore >= 60}
+                        />
+                      )}
+
+                    {/* 标准答案和解析 */}
+                    {(currentQuestion.type === 'FILL_BLANK' || currentQuestion.type === 'SHORT_ANSWER') && (
+                      <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+                        <Title level={5}>标准答案</Title>
+                        <Text strong>{currentQuestion.correctAnswer}</Text>
+                        <Divider style={{ margin: '12px 0' }} />
+                        <Title level={5}>题目解析</Title>
+                        <Text>{currentQuestion.explanation}</Text>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <Divider />
@@ -314,7 +381,7 @@ const SimplifiedPractice: React.FC = () => {
                       {currentSession.currentQuestion < currentSession.questionCount ? '下一题' : '完成练习'}
                     </Button>
                   )}
-                  
+
                   <Button onClick={handleFinishPractice}>
                     结束练习
                   </Button>

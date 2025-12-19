@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Typography, Statistic } from 'antd';
+import {
+  FileTextOutlined,
+  DeploymentUnitOutlined,
+  ReadOutlined,
+  TrophyOutlined
+} from '@ant-design/icons';
 import { useAppStore } from '../store';
 import { questionService } from '../services/questionService';
 import { examPaperService } from '../services/examPaperService';
@@ -39,29 +45,33 @@ const HomeStatsSection: React.FC = () => {
         const recTotal = recRes ? recRes.summary?.totalRecords ?? 0 : examRecords.length;
 
         setCounts({ questions: qTotal, rules: rTotal, papers: pTotal, records: recTotal });
-      } catch {}
+      } catch { }
     };
     load();
   }, []);
 
   const stats = [
-    { title: '题目数量', value: counts.questions },
-    { title: '规则数量', value: counts.rules },
-    { title: '试卷数量', value: counts.papers },
-    { title: '练习记录', value: counts.records },
+    { title: '题目总数', value: counts.questions, icon: <ReadOutlined />, color: '#1890ff' },
+    { title: '组卷规则', value: counts.rules, icon: <DeploymentUnitOutlined />, color: '#722ed1' },
+    { title: '试卷库存', value: counts.papers, icon: <FileTextOutlined />, color: '#fa8c16' },
+    { title: '练习人次', value: counts.records, icon: <TrophyOutlined />, color: '#52c41a' },
   ];
 
   return (
-    <div className="home-section" style={{ marginTop: 40 }}>
-      <div style={{ textAlign: 'center', marginBottom: 16 }}>
-        <Title level={3} className="home-section-title">数据概览</Title>
-        <Text type="secondary">系统内容与学习成果的简要统计</Text>
+    <div className="home-section">
+      <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <Title level={2} className="home-section-title">平台数据</Title>
+        <Text className="home-section-desc">海量题库支撑，见证你的每一次成长</Text>
       </div>
       <Row gutter={[24, 24]}>
         {stats.map((s, i) => (
           <Col xs={24} sm={12} md={6} key={i}>
-            <Card hoverable className="home-stats-card" style={{ textAlign: 'center' }}>
-              <Statistic title={s.title} value={s.value} valueStyle={{ fontSize: 24 }} />
+            <Card hoverable className="home-stats-card">
+              <div style={{ fontSize: 32, color: s.color, marginBottom: 8 }}>
+                {s.icon}
+              </div>
+              <div className="stats-value">{s.value}</div>
+              <div style={{ color: '#8c8c8c' }}>{s.title}</div>
             </Card>
           </Col>
         ))}

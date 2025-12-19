@@ -58,3 +58,42 @@ export interface AuthContextType extends AuthState {
   clearError: () => void;
 }
 
+// 角色检查辅助函数
+export const isAdmin = (user: User | null): boolean => {
+  return user?.role === UserRole.ADMIN;
+};
+
+export const isContentAdmin = (user: User | null): boolean => {
+  return user?.role === UserRole.TEACHER;
+};
+
+export const isAnyAdmin = (user: User | null): boolean => {
+  return isAdmin(user) || isContentAdmin(user);
+};
+
+export const isStudent = (user: User | null): boolean => {
+  return user?.role === UserRole.STUDENT;
+};
+
+// 权限检查辅助函数
+export const canManageSystemContent = (user: User | null): boolean => {
+  return isAnyAdmin(user);
+};
+
+export const canAccessSystemManagement = (user: User | null): boolean => {
+  return isAdmin(user);
+};
+
+// 角色显示名称
+export const getRoleDisplayName = (role: UserRole): string => {
+  switch (role) {
+    case UserRole.ADMIN:
+      return '系统管理员';
+    case UserRole.TEACHER:
+      return '内容管理员';
+    case UserRole.STUDENT:
+      return '学生';
+    default:
+      return '未知角色';
+  }
+};

@@ -87,6 +87,12 @@ public class QuestionEntity {
     private List<String> knowledgePoints;
 
     /**
+     * 学科名称（用于显示或导入时的临时存储，不存储到数据库）
+     */
+    @TableField(exist = false)
+    private String subject;
+
+    /**
      * 题目状态
      */
     @TableField(exist = false)
@@ -173,7 +179,6 @@ public class QuestionEntity {
         }
     }
 
-
     // ==================== 业务方法 ====================
 
     /**
@@ -213,7 +218,8 @@ public class QuestionEntity {
         }
         try {
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(options, new TypeReference<List<String>>() {});
+            return mapper.readValue(options, new TypeReference<List<String>>() {
+            });
         } catch (Exception e) {
             return new ArrayList<>();
         }
@@ -258,7 +264,8 @@ public class QuestionEntity {
         if (knowledgePointIds != null && !knowledgePointIds.trim().isEmpty()) {
             try {
                 ObjectMapper mapper = new ObjectMapper();
-                return mapper.readValue(knowledgePointIds, new TypeReference<List<Long>>() {});
+                return mapper.readValue(knowledgePointIds, new TypeReference<List<Long>>() {
+                });
             } catch (Exception e) {
                 return new ArrayList<>();
             }
@@ -280,4 +287,3 @@ public class QuestionEntity {
         return knowledgePoints != null ? knowledgePoints.size() : 0;
     }
 }
-

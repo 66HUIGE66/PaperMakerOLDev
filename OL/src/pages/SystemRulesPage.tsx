@@ -56,10 +56,10 @@ interface ExamRule {
 const SystemRulesPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   // 检查是否为管理员
   const isAdmin = user?.role === 'ADMIN';
-  
+
   const [rules, setRules] = useState<ExamRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -80,12 +80,12 @@ const SystemRulesPage: React.FC = () => {
         size: pageSize.toString(),
         isSystem: 'true' // 只加载系统规则
       });
-      
+
       if (searchText) params.append('name', searchText);
       if (filterStatus !== 'ALL') params.append('status', filterStatus);
-      
+
       const url = `${API_CONFIG.BASE_URL}/api/rules/list?${params}`;
-      
+
       const token = authService.getToken();
       if (!token) {
         throw new Error('用户未登录，请先登录');
@@ -99,13 +99,13 @@ const SystemRulesPage: React.FC = () => {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP错误: ${response.status} ${response.statusText}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (result.code === 200) {
         // 后端已经根据isSystem=true进行了过滤
         const systemRules = result.data.records || [];
@@ -135,7 +135,7 @@ const SystemRulesPage: React.FC = () => {
   }, []);
 
   // 检查用户是否有权限操作规则
-  const hasPermission = (rule: ExamRule) => {
+  const hasPermission = (_rule: ExamRule) => {
     // 只有管理员可以操作系统规则
     return isAdmin;
   };
@@ -198,7 +198,7 @@ const SystemRulesPage: React.FC = () => {
         }
       });
       const result = await response.json();
-      
+
       if (result.code === 200) {
         message.success('规则删除成功');
         loadRules(pagination.current, pagination.pageSize);
@@ -227,7 +227,7 @@ const SystemRulesPage: React.FC = () => {
         }
       });
       const result = await response.json();
-      
+
       if (result.code === 200) {
         message.success('规则复制成功，已添加到我的规则');
         // 提示用户去查看我的规则
@@ -266,7 +266,7 @@ const SystemRulesPage: React.FC = () => {
         }
       });
       const result = await response.json();
-      
+
       if (result.code === 200) {
         message.success('状态更新成功');
         loadRules(pagination.current, pagination.pageSize);
@@ -286,10 +286,10 @@ const SystemRulesPage: React.FC = () => {
       dataIndex: 'name',
       key: 'name',
       width: 200,
-      render: (text: string, record: ExamRule) => (
+      render: (text: string, _record: ExamRule) => (
         <div>
           <div style={{ fontWeight: 'bold' }}>{text}</div>
-          <Tag color="blue" size="small">系统</Tag>
+          <Tag color="blue">系统</Tag>
         </div>
       )
     },
@@ -415,7 +415,7 @@ const SystemRulesPage: React.FC = () => {
   } : undefined;
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="page-container">
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>系统规则</Title>
         <Text type="secondary">查看系统提供的组卷规则，所有用户都可以使用这些规则生成试卷</Text>

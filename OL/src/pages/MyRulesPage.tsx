@@ -28,7 +28,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { API_CONFIG } from '../config/api';
 import { authService } from '../services/authService';
-import { useAuth } from '../contexts/AuthContext';
+// import { useAuth } from '../contexts/AuthContext';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -54,8 +54,8 @@ interface ExamRule {
 
 const MyRulesPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  
+  // const { user } = useAuth();
+
   const [rules, setRules] = useState<ExamRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -76,12 +76,12 @@ const MyRulesPage: React.FC = () => {
         size: pageSize.toString(),
         isSystem: 'false' // 只加载个人规则
       });
-      
+
       if (searchText) params.append('name', searchText);
       if (filterStatus !== 'ALL') params.append('status', filterStatus);
-      
+
       const url = `${API_CONFIG.BASE_URL}/api/rules/list?${params}`;
-      
+
       const token = authService.getToken();
       if (!token) {
         throw new Error('用户未登录，请先登录');
@@ -95,13 +95,13 @@ const MyRulesPage: React.FC = () => {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP错误: ${response.status} ${response.statusText}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (result.code === 200) {
         // 后端已经根据isSystem=false和creatorId进行了过滤
         const myRules = result.data.records || [];
@@ -175,7 +175,7 @@ const MyRulesPage: React.FC = () => {
         }
       });
       const result = await response.json();
-      
+
       if (result.code === 200) {
         message.success('规则删除成功');
         loadRules(pagination.current, pagination.pageSize);
@@ -204,7 +204,7 @@ const MyRulesPage: React.FC = () => {
         }
       });
       const result = await response.json();
-      
+
       if (result.code === 200) {
         message.success('规则复制成功');
         loadRules(pagination.current, pagination.pageSize);
@@ -233,7 +233,7 @@ const MyRulesPage: React.FC = () => {
         }
       });
       const result = await response.json();
-      
+
       if (result.code === 200) {
         message.success('状态更新成功');
         loadRules(pagination.current, pagination.pageSize);
@@ -269,7 +269,7 @@ const MyRulesPage: React.FC = () => {
         body: JSON.stringify(selectedRowKeys)
       });
       const result = await response.json();
-      
+
       if (result.code === 200) {
         message.success('批量删除成功');
         setSelectedRowKeys([]);
@@ -412,7 +412,7 @@ const MyRulesPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="page-container">
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>我的规则</Title>
         <Text type="secondary">管理您创建的组卷规则，包括创建、编辑、删除和状态控制</Text>

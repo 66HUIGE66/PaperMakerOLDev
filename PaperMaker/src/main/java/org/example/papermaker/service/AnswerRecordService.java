@@ -9,30 +9,3 @@ public interface AnswerRecordService extends IService<AnswerRecordEntity> {
 
     boolean saveBatchAnswers(Long examRecordId, List<AnswerRecordEntity> answers);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

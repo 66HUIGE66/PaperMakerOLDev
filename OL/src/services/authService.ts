@@ -5,31 +5,31 @@ export const authService = {
   // 用户登录
   async login(credentials: LoginRequest): Promise<User> {
     // try {
-      const response = await apiClient.post<AuthResponse>('/user/login', 
-        new URLSearchParams({
-          username: credentials.username,
-          password: credentials.password,
-        }),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        }
-      );
-      console.log("response:" , response);
-      if (response.data.code === 200 && response.data.object) {
-        const loginResponse = response.data.object as LoginResponse;
-        const user = loginResponse.user;
-        const token = loginResponse.token;
-        
-        // 存储用户信息和真正的JWT token
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('token', token);
-        
-        return user;
-      } else {
-        throw new Error(response.data.message || '登录失败');
+    const response = await apiClient.post<AuthResponse>('/api/user/login',
+      new URLSearchParams({
+        username: credentials.username,
+        password: credentials.password,
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
       }
+    );
+    console.log("response:", response);
+    if (response.data.code === 200 && response.data.object) {
+      const loginResponse = response.data.object as LoginResponse;
+      const user = loginResponse.user;
+      const token = loginResponse.token;
+
+      // 存储用户信息和真正的JWT token
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
+
+      return user;
+    } else {
+      throw new Error(response.data.message || '登录失败');
+    }
     // } catch (error: any) {
     //   if (error.response?.data?.message) {
     //     throw new Error(error.response.data.message);
@@ -41,7 +41,7 @@ export const authService = {
   // 用户注册
   async register(userData: RegisterRequest): Promise<User> {
     try {
-      const response = await apiClient.post<AuthResponse>('/user/create', {
+      const response = await apiClient.post<AuthResponse>('/api/user/create', {
         username: userData.username,
         email: userData.email,
         password: userData.password,
@@ -53,11 +53,11 @@ export const authService = {
         const loginResponse = response.data.object as LoginResponse;
         const user = loginResponse.user;
         const token = loginResponse.token;
-        
+
         // 注册成功后自动登录，存储用户信息和token
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('token', token);
-        
+
         return user;
       } else {
         throw new Error(response.data.message || '注册失败');
@@ -88,7 +88,7 @@ export const authService = {
   isAuthenticated(): boolean {
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
-    
+
     // 检查是否是旧的模拟token，如果是则清除
     if (token && token.startsWith('mock-token-')) {
       console.log('检测到旧的模拟token，正在清除...');
@@ -96,7 +96,7 @@ export const authService = {
       this.logout().catch(err => console.error('清除旧token失败:', err));
       return false;
     }
-    
+
     return !!(token && user);
   },
 
@@ -107,7 +107,7 @@ export const authService = {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          await apiClient.post('/user/logout', null, {
+          await apiClient.post('/api/user/logout', null, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -143,7 +143,7 @@ export const authService = {
       }
 
       // 调用后端API验证token
-      const response = await apiClient.get('/user/validate-token');
+      const response = await apiClient.get('/api/user/validate-token');
       return response.data.code === 200;
     } catch (error) {
       console.error('Token验证失败:', error);

@@ -11,19 +11,32 @@ import org.example.papermaker.entity.UserEntity;
 public class SimplePermissionUtils {
 
     /**
-     * 检查用户是否为管理员
+     * 检查用户是否为系统管理员
      */
     public static boolean isAdmin(UserEntity user) {
         return user != null && user.getRole() == UserEntity.UserRole.ADMIN;
     }
 
+    /**
+     * 检查用户是否为内容管理员（教师）
+     */
+    public static boolean isContentAdmin(UserEntity user) {
+        return user != null && user.getRole() == UserEntity.UserRole.TEACHER;
+    }
 
     /**
-     * 检查用户是否有系统管理权限
-     * 只有管理员可以操作系统内容
+     * 检查用户是否为管理员（系统管理员或内容管理员）
+     */
+    public static boolean isAnyAdmin(UserEntity user) {
+        return isAdmin(user) || isContentAdmin(user);
+    }
+
+    /**
+     * 检查用户是否有系统内容管理权限
+     * 系统管理员和内容管理员都可以操作系统内容
      */
     public static boolean hasSystemManagePermission(UserEntity user) {
-        return isAdmin(user);
+        return isAnyAdmin(user);
     }
 
     /**
@@ -42,12 +55,12 @@ public class SimplePermissionUtils {
         if (user == null) {
             return false;
         }
-        
+
         // 管理员可以编辑所有内容
         if (isAdmin(user)) {
             return true;
         }
-        
+
         // 学生只能编辑自己创建的内容
         return user.getId().equals(creatorId);
     }
@@ -60,12 +73,12 @@ public class SimplePermissionUtils {
         if (user == null) {
             return false;
         }
-        
+
         // 如果是系统内容，只有管理员可以修改
         if (isSystem) {
             return isAdmin(user);
         }
-        
+
         // 非系统内容按普通权限处理
         return true;
     }
@@ -100,61 +113,3 @@ public class SimplePermissionUtils {
         return !isSystemContent(isSystem);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

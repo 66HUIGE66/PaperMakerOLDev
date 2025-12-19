@@ -6,12 +6,14 @@ langchain4j:
       model-name: Qwen/Qwen2.5-7B-Instruct
       log-requests: true
       log-responses: true
+      strict-tools: true
     streaming-chat-model:
       base-url: https://api.siliconflow.cn
       api-key: ${API-KEY:}
       model-name: Qwen/Qwen2.5-7B-Instruct
       log-requests: true
       log-responses: true
+
 logging:
   level:
     dev.langchain4j: debug
@@ -39,3 +41,11 @@ spring:
 # JWT配置
 jwt:
   secret: PaperMakerSecretKeyForJWTTokenGeneration2025
+
+aliyun:
+  oss:
+    endpoint: ${ALIYUN_OSS_ENDPOINT:oss-cn-guangzhou.aliyuncs.com}
+    access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET:}
+    bucket-name: ${ALIYUN_OSS_BUCKET_NAME:}
+

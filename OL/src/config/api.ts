@@ -7,13 +7,13 @@ import axios from 'axios';
 export const API_CONFIG = {
   // 后端API基础地址
   BASE_URL: 'http://localhost:8080',
-  
+
   // 请求超时时间
-  TIMEOUT: 10000,
-  
+  TIMEOUT: 60000,
+
   // 是否允许携带凭证
   WITH_CREDENTIALS: true,
-  
+
   // 默认请求头
   DEFAULT_HEADERS: {
     'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ apiClient.interceptors.request.use(
     } else {
       console.warn('没有找到token，请求可能失败');
     }
-    
+
     // 添加时间戳防止缓存
     if (config.method === 'get') {
       config.params = {
@@ -47,7 +47,7 @@ apiClient.interceptors.request.use(
         _t: Date.now(),
       };
     }
-    
+
     return config;
   },
   (error) => {
@@ -66,7 +66,7 @@ apiClient.interceptors.response.use(
       message: error.response?.data?.message || error.message,
       data: error.response?.data
     });
-    
+
     // 处理401未授权
     if (error.response?.status === 401) {
       console.error('认证失败，清除本地存储');
@@ -78,7 +78,7 @@ apiClient.interceptors.response.use(
         console.error('练习记录API认证失败，用户未登录或token已过期');
 
         // 创建一个更友好的错误对象，包含认证失败的详细信息
-        const authError = new Error('用户未登录');
+        const authError = new Error('用户未登录') as any;
         authError.response = error.response;
         throw authError;
       }
@@ -88,12 +88,12 @@ apiClient.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    
+
     // 处理网络错误
     if (!error.response) {
       console.error('网络错误，请检查后端服务是否启动');
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -101,9 +101,9 @@ apiClient.interceptors.response.use(
 // 导出常用的HTTP方法
 export const api = {
   get: (url: string, config?: any) => apiClient.get(url, config),
-  post: (url: string, data?: any) => apiClient.post(url, data),
-  put: (url: string, data?: any) => apiClient.put(url, data),
-  delete: (url: string) => apiClient.delete(url),
+  post: (url: string, data?: any, config?: any) => apiClient.post(url, data, config),
+  put: (url: string, data?: any, config?: any) => apiClient.put(url, data, config),
+  delete: (url: string, config?: any) => apiClient.delete(url, config),
 };
 
 export default apiClient;

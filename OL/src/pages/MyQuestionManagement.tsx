@@ -1,32 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Table, 
-  Button, 
-  Space, 
-  message, 
-  Modal, 
-  Form, 
-  Input, 
-  Select, 
+import dayjs from 'dayjs';
+import {
+  Table,
+  Button,
+  Space,
+  message,
+  Modal,
+  Form,
+  Input,
+  Select,
   Card,
   Tag,
   Popconfirm,
-  Typography
+  Typography,
+  Upload
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, ClearOutlined } from '@ant-design/icons';
 import { questionService, Question } from '../services/questionService';
 import QuestionOptions from '../components/QuestionOptions';
 import AnswerInput from '../components/AnswerInput';
 import SearchFilter, { SearchFilterConfig, SearchFilterValue } from '../components/SearchFilter';
 import DocumentImport from '../components/DocumentImport';
-import { subjectApi, knowledgePointApi } from '../services/api';
+import { subjectApi, knowledgePointApi, commonApi, questionApi } from '../services/api';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
 const MyQuestionManagement: React.FC = () => {
-  const [questions, setQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -42,6 +45,46 @@ const MyQuestionManagement: React.FC = () => {
   const [subjects, setSubjects] = useState<Array<{ label: string; value: number }>>([]);
   const [currentFilters, setCurrentFilters] = useState<SearchFilterValue>({}); // 当前筛选条件
   const [knowledgePointOptions, setKnowledgePointOptions] = useState<Array<{ label: string; value: number }>>([]);
+
+  // 用于管理的待上传图片 Map: tempUrl -> File
+  const [pendingImages, setPendingImages] = useState<Map<string, File>>(new Map());
+
+  // 监听字段以实现实时预览
+  const titleValue = Form.useWatch('title', form);
+  const explanationValue = Form.useWatch('explanation', form);
+
+  // Markdown 预览组件 (复用逻辑)
+  const MarkdownPreview = ({ content, label }: { content: string; label: string }) => {
+    if (!content) return null;
+    return (
+      <div style={{
+        marginTop: 8,
+        padding: '8px 12px',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 4,
+        border: '1px solid #d9d9d9'
+      }}>
+        <div style={{ fontSize: '12px', color: '#8c8c8c', marginBottom: 4 }}>{label} 预览：</div>
+        <div className="markdown-preview" style={{
+          maxWidth: '100%',
+          overflow: 'hidden',
+          lineHeight: '1.6'
+        }}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            urlTransform={(uri) => uri.startsWith('blob:') ? uri : uri}
+            components={{
+              img: ({ node, ...props }) => (
+                <img {...props} style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '8px 0' }} alt="预览图片" />
+              )
+            }}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
+      </div>
+    );
+  };
 
   // 加载学科列表
   const loadSubjects = async () => {
@@ -107,13 +150,13 @@ const MyQuestionManagement: React.FC = () => {
     try {
       // 构建筛选参数
       const filterParams: any = {};
-      
+
       if (filters) {
         // 关键词搜索
         if (filters.search) {
           filterParams.keyword = filters.search;
         }
-        
+
         // 基础筛选
         if (filters.filters) {
           if (filters.filters.type) {
@@ -125,13 +168,12 @@ const MyQuestionManagement: React.FC = () => {
           if (filters.filters.subjectId) {
             filterParams.subjectId = filters.filters.subjectId;
           }
-          
+
           // 创建时间范围筛选
           if (filters.filters.createdDate && Array.isArray(filters.filters.createdDate) && filters.filters.createdDate.length === 2) {
             const [start, end] = filters.filters.createdDate;
             // 处理dayjs对象或Date对象
             if (start && end) {
-              const dayjs = require('dayjs');
               const startDate = dayjs.isDayjs(start) ? start : dayjs(start);
               const endDate = dayjs.isDayjs(end) ? end : dayjs(end);
               filterParams.startDate = startDate.format('YYYY-MM-DD');
@@ -140,9 +182,8 @@ const MyQuestionManagement: React.FC = () => {
           }
         }
       }
-      
+
       const response = await questionService.getMyQuestions(page, size, Object.keys(filterParams).length > 0 ? filterParams : undefined);
-      setQuestions(response.records);
       setFilteredQuestions(response.records);
       setTotal(response.total); // 保存后端返回的总数
     } catch (error: any) {
@@ -177,64 +218,131 @@ const MyQuestionManagement: React.FC = () => {
     fetchQuestions(currentPage, pageSize, currentFilters);
   };
 
+  // 处理清理重复
+  const handleCleanupDuplicates = async () => {
+    try {
+      setLoading(true);
+      const res = await questionApi.cleanupDuplicates();
+      if (res.data.code === 200) {
+        message.success(res.data.message || `清理完成，共删除 ${res.data.object} 条重复数据`);
+        fetchQuestions(1, pageSize, currentFilters);
+      } else {
+        message.error(res.data.message || '清理失败');
+      }
+    } catch (error: any) {
+      message.error('清理失败: ' + (error.message || '未知错误'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadSubjects();
     fetchQuestions(1, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 上传题目中的所有本地图片并替换 URL
+  const uploadAndReplaceImages = async (content: string) => {
+    if (!content) return content;
+    let newContent = content;
+    const urlPattern = /!\[.*?\]\((blob:.*?)\)/g;
+    const matches = Array.from(content.matchAll(urlPattern));
+
+    for (const match of matches) {
+      const tempUrl = match[1];
+      const file = pendingImages.get(tempUrl);
+      if (file) {
+        try {
+          const res = await commonApi.uploadImage(file);
+          const responseData = res.data?.object;
+          const finalUrl = typeof responseData === 'string' ? responseData : responseData?.url;
+          if (finalUrl) {
+            newContent = newContent.replace(tempUrl, finalUrl);
+          }
+        } catch (error) {
+          console.error('图片上传失败:', error);
+          throw new Error('部分图片上传失败，请稍后重试');
+        }
+      }
+    }
+    return newContent;
+  };
 
   // 处理创建/编辑题目
   const handleSubmit = async (values: any) => {
     try {
-      // 处理选项数据
-      let optionsData = null;
-      if (questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE') {
-        const validOptions = questionOptions.filter(opt => opt.trim() !== '');
-        if (validOptions.length === 0) {
-          message.error('选择题必须提供选项');
-          return;
-        }
-        optionsData = JSON.stringify(validOptions);
-      }
-      // 对于非选择题（填空题、判断题、简答题），optionsData 保持为 null
+      setLoading(true);
 
-      const questionData: any = {
-        title: values.title,
-        type: values.type,
-        difficulty: values.difficulty,
-        correctAnswer: values.correctAnswer,
-        explanation: values.explanation || '',
-        subjectId: values.subjectId,
-        knowledgePointIdsList: values.knowledgePointIdsList
-      };
-      
-      // 只有当optionsData不为null时才添加到数据中
-  if (optionsData !== null) {
-    questionData.options = optionsData;
-  }
-      
-      console.log('发送的题目数据:', questionData);
-      
-  if (editingQuestion) {
-    // 编辑题目
-    await questionService.updateQuestion(editingQuestion.id!, questionData);
-    try { await subjectApi.refreshMapping(); } catch {}
-    message.success('题目更新成功');
-  } else {
-    // 创建个人题目
-    await questionService.createMyQuestion(questionData);
-    try { await subjectApi.refreshMapping(); } catch {}
-    message.success('个人题目创建成功');
-  }
-      setModalVisible(false);
-      setEditingQuestion(null);
-      form.resetFields();
-      setQuestionType('SINGLE_CHOICE');
-      setQuestionOptions(['', '']);
-      fetchQuestions(currentPage, pageSize, currentFilters);
-    } catch (error: any) {
-      const errMsg = (error as any)?.response?.data?.message || (error as any)?.message || '创建题目失败';
-      message.error(errMsg);
+      // 1. 先上传并处理内容中的图片
+      let finalTitle = values.title;
+      let finalExplanation = values.explanation || '';
+
+      try {
+        finalTitle = await uploadAndReplaceImages(finalTitle);
+        finalExplanation = await uploadAndReplaceImages(finalExplanation);
+
+        // 处理选项中的图片
+        const updatedOptions = await Promise.all(questionOptions.map(async (opt) => {
+          return await uploadAndReplaceImages(opt);
+        }));
+        setQuestionOptions(updatedOptions);
+
+        // 重新构建选项数据
+        let optionsData = null;
+        if (questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE') {
+          const validOptions = updatedOptions.filter(opt => opt.trim() !== '');
+          if (validOptions.length === 0) {
+            message.error('选择题必须提供选项');
+            setLoading(false);
+            return;
+          }
+          optionsData = JSON.stringify(validOptions);
+        }
+
+        const questionData: any = {
+          title: finalTitle,
+          type: values.type,
+          difficulty: values.difficulty,
+          correctAnswer: values.correctAnswer,
+          explanation: finalExplanation,
+          subjectId: values.subjectId,
+          knowledgePointIdsList: values.knowledgePointIdsList
+        };
+
+        // 只有当optionsData不为null时才添加到数据中
+        if (optionsData !== null) {
+          questionData.options = optionsData;
+        }
+
+        console.log('发送的题目数据:', questionData);
+
+        if (editingQuestion) {
+          // 编辑题目
+          await questionService.updateQuestion(editingQuestion.id!, questionData);
+          try { await subjectApi.refreshMapping(); } catch { }
+          message.success('题目更新成功');
+        } else {
+          // 创建个人题目
+          await questionService.createMyQuestion(questionData);
+          try { await subjectApi.refreshMapping(); } catch { }
+          message.success('个人题目创建成功');
+        }
+        setModalVisible(false);
+        setEditingQuestion(null);
+        form.resetFields();
+        setQuestionType('SINGLE_CHOICE');
+        setQuestionOptions(['', '']);
+        setPendingImages(new Map());
+        fetchQuestions(currentPage, pageSize, currentFilters);
+      } catch (error: any) {
+        console.error('保存题目失败:', error);
+        const errMsg = error?.response?.data?.message || error?.message || '操作失败';
+        message.error(errMsg);
+      } finally {
+        setLoading(false);
+      }
+    } catch (e) {
+      console.error('表单提交异常:', e);
     }
   };
 
@@ -242,7 +350,7 @@ const MyQuestionManagement: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await questionService.deleteQuestion(id);
-      try { await subjectApi.refreshMapping(); } catch {}
+      try { await subjectApi.refreshMapping(); } catch { }
       message.success('题目删除成功');
       fetchQuestions(currentPage, pageSize, currentFilters);
     } catch (error: any) {
@@ -256,11 +364,48 @@ const MyQuestionManagement: React.FC = () => {
     console.log('编辑题目数据:', question);
     setEditingQuestion(question);
     setQuestionType(question.type || 'SINGLE_CHOICE');
-    
+
     // 处理选项数据
-    const questionOptions = question.optionsList || question.options || ['', ''];
+    let questionOptions: string[] = ['', ''];
+    const rawOptions = question.optionsList || question.options;
+
+    if (Array.isArray(rawOptions)) {
+      questionOptions = rawOptions;
+    } else if (typeof rawOptions === 'string') {
+      try {
+        const parsed = JSON.parse(rawOptions);
+        if (Array.isArray(parsed)) {
+          questionOptions = parsed;
+        }
+      } catch (e) {
+        console.error('解析选项失败:', e);
+        if (String(rawOptions).includes(',')) {
+          questionOptions = String(rawOptions).split(',');
+        } else {
+          questionOptions = [String(rawOptions), ''];
+        }
+      }
+    }
     setQuestionOptions(questionOptions);
-    
+
+    // 解析知识点 ID 列表（列表接口可能只返回 knowledgePointIds 字符串）
+    const rawKpIds = (question as any).knowledgePointIdsList || (question as any).knowledgePointIds;
+    let finalKpIds: number[] = [];
+    if (Array.isArray(rawKpIds)) {
+      finalKpIds = rawKpIds.map(id => Number(id)).filter(id => !isNaN(id));
+    } else if (typeof rawKpIds === 'string' && rawKpIds.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(rawKpIds);
+        if (Array.isArray(parsed)) {
+          finalKpIds = parsed.map(id => Number(id)).filter(id => !isNaN(id));
+        }
+      } catch (e) {
+        console.error('解析知识点ID JSON失败:', e);
+      }
+    } else if (typeof rawKpIds === 'string' && rawKpIds.trim() !== '') {
+      finalKpIds = rawKpIds.split(',').map(id => Number(id.trim())).filter(id => !isNaN(id));
+    }
+
     // 设置表单值，包括选项和答案
     form.setFieldsValue({
       title: question.title,
@@ -268,37 +413,42 @@ const MyQuestionManagement: React.FC = () => {
       difficulty: question.difficulty,
       correctAnswer: question.correctAnswer,
       explanation: question.explanation,
-      subjectId: (question as any).subjectId,
-      knowledgePointIdsList: (question as any).knowledgePointIdsList || []
+      subjectId: question.subjectId ? Number(question.subjectId) : undefined,
+      knowledgePointIdsList: finalKpIds
     });
     const sid = (question as any).subjectId;
     if (sid) {
-      onSubjectChange(sid);
+      onSubjectChange(sid, true);
     }
-    
+
     setModalVisible(true);
   };
 
-  // 打开创建模态框
   const openCreateModal = () => {
     setEditingQuestion(null);
     form.resetFields();
     setQuestionType('SINGLE_CHOICE');
     setQuestionOptions(['', '']);
+    setPendingImages(new Map());
     setModalVisible(true);
   };
 
-  // 关闭模态框
   const closeModal = () => {
     setModalVisible(false);
     setEditingQuestion(null);
     form.resetFields();
     setQuestionType('SINGLE_CHOICE');
     setQuestionOptions(['', '']);
+    setPendingImages(new Map());
   };
 
-  const onSubjectChange = async (subjectId: number) => {
-    form.setFieldsValue({ knowledgePointIdsList: [] });
+  const onSubjectChange = async (subjectId: number, preserveValueOrOption?: boolean | any) => {
+    // 如果第二个参数明确为 true，则保留值；否则（是事件对象或 undefined）清空值
+    const preserveValue = preserveValueOrOption === true;
+
+    if (!preserveValue) {
+      form.setFieldsValue({ knowledgePointIdsList: [] });
+    }
     const subject = subjects.find(s => s.value === subjectId);
     if (!subject) {
       setKnowledgePointOptions([]);
@@ -419,6 +569,20 @@ const MyQuestionManagement: React.FC = () => {
             我的题目管理
           </Title>
           <Space>
+            <Popconfirm
+              title="确定要清理重复题目吗？"
+              description="程序将为每组内容重复的题目保留最早创建的一条记录，并清理个人库中与系统题库重复的多余记录。"
+              onConfirm={handleCleanupDuplicates}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button
+                icon={<ClearOutlined />}
+                danger
+              >
+                清理重复题目
+              </Button>
+            </Popconfirm>
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -484,7 +648,8 @@ const MyQuestionManagement: React.FC = () => {
         onCancel={closeModal}
         footer={null}
         width={800}
-        destroyOnHidden
+        destroyOnClose
+        forceRender
       >
         <Form
           form={form}
@@ -493,10 +658,34 @@ const MyQuestionManagement: React.FC = () => {
         >
           <Form.Item
             name="title"
-            label="题目标题"
+            label={
+              <Space>
+                <span>题目标题</span>
+                <Upload
+                  showUploadList={false}
+                  beforeUpload={(file) => {
+                    const isImage = file.type.startsWith('image/');
+                    if (!isImage) {
+                      message.error('请上传图片文件');
+                      return false;
+                    }
+                    const tempUrl = URL.createObjectURL(file);
+                    setPendingImages(prev => new Map(prev).set(tempUrl, file));
+
+                    const current = form.getFieldValue('title') || '';
+                    form.setFieldsValue({ title: current + `\n![图片](${tempUrl})\n` });
+                    message.success('已添加本地预览，保存时将正式上传');
+                    return false;
+                  }}
+                >
+                  <Button size="small" type="link">🖼️ 插入图片</Button>
+                </Upload>
+              </Space>
+            }
             rules={[{ required: true, message: '请输入题目标题' }]}
           >
-            <TextArea rows={3} placeholder="请输入题目标题" />
+            <TextArea rows={3} placeholder="请输入题目标题，可使用Markdown图片格式 ![描述](图片链接)" />
+            <MarkdownPreview content={titleValue} label="题目标题" />
           </Form.Item>
 
           <Form.Item
@@ -504,7 +693,7 @@ const MyQuestionManagement: React.FC = () => {
             label="题目类型"
             rules={[{ required: true, message: '请选择题目类型' }]}
           >
-            <Select 
+            <Select
               placeholder="请选择题目类型"
               value={questionType}
               onChange={(value) => {
@@ -536,7 +725,14 @@ const MyQuestionManagement: React.FC = () => {
           <QuestionOptions
             questionType={questionType}
             value={questionOptions}
-            onChange={setQuestionOptions}
+            onChange={(opts) => {
+              setQuestionOptions(opts);
+            }}
+            onImageSelect={(file) => {
+              const tempUrl = URL.createObjectURL(file);
+              setPendingImages(prev => new Map(prev).set(tempUrl, file));
+              return tempUrl;
+            }}
           />
 
           {/* 答案输入组件 */}
@@ -553,9 +749,33 @@ const MyQuestionManagement: React.FC = () => {
 
           <Form.Item
             name="explanation"
-            label="题目解析"
+            label={
+              <Space>
+                <span>题目解析</span>
+                <Upload
+                  showUploadList={false}
+                  beforeUpload={(file) => {
+                    const isImage = file.type.startsWith('image/');
+                    if (!isImage) {
+                      message.error('请上传图片文件');
+                      return false;
+                    }
+                    const tempUrl = URL.createObjectURL(file);
+                    setPendingImages(prev => new Map(prev).set(tempUrl, file));
+
+                    const current = form.getFieldValue('explanation') || '';
+                    form.setFieldsValue({ explanation: current + `\n![解析图片](${tempUrl})\n` });
+                    message.success('已添加本地预览，保存时将正式上传');
+                    return false;
+                  }}
+                >
+                  <Button size="small" type="link">🖼️ 插入图片</Button>
+                </Upload>
+              </Space>
+            }
           >
             <TextArea rows={3} placeholder="请输入题目解析" />
+            <MarkdownPreview content={explanationValue} label="题目解析" />
           </Form.Item>
 
           <Form.Item

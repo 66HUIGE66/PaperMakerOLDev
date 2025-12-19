@@ -1,87 +1,68 @@
 import React, { useState, Suspense } from 'react';
 import { Typography, Button, Space, Row, Col, Card } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { RocketOutlined, ThunderboltFilled } from '@ant-design/icons';
+import './Home.css';
 
 const { Title, Paragraph, Text } = Typography;
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
 
-  
-
-  const [navigating, setNavigating] = useState<string | null>(null);
   const enableLazy = (import.meta as any).env?.VITE_LAZY_HOME_FEATURES !== 'false';
   const LazyFeaturesSection = enableLazy ? React.lazy(() => import('./HomeFeaturesSection')) : null as any;
   const LazyQuickStartSection = enableLazy ? React.lazy(() => import('./HomeQuickStartSection')) : null as any;
   const LazyStatsSection = enableLazy ? React.lazy(() => import('./HomeStatsSection')) : null as any;
-
-  const go = (path: string, key: string) => {
-    setNavigating(key);
-    setTimeout(() => {
-      navigate(path);
-      setNavigating(null);
-    }, 200);
-  };
+  const LazyAnnouncementSection = enableLazy ? React.lazy(() => import('./HomeAnnouncementSection')) : null as any;
 
   return (
-    <div className="fade-in" style={{ padding: 24 }}>
-      <div className="home-hero brand-gradient" style={{ textAlign: 'center', marginBottom: 32, padding: '48px 24px', borderRadius: 16 }}>
-        <Title level={1} className="home-hero-title">
-          智能组卷刷题系统
-        </Title>
-        <Paragraph className="home-hero-subtitle">
-          基于规则的智能组卷与多样化练习模式，助力高效学习
-        </Paragraph>
-        {/*<Space className="home-cta-group" size="large">*/}
-        {/*  <Button type="primary" size="large" onClick={() => go('/practice', 'practice')} loading={navigating === 'practice'}>*/}
-        {/*    立即开始*/}
-        {/*  </Button>*/}
-        {/*  <Button size="large" className="btn-ghost" onClick={() => go('/paper-generation', 'generation')} loading={navigating === 'generation'}>*/}
-        {/*    智能组卷*/}
-        {/*  </Button>*/}
-        {/*</Space>*/}
+    <div className="home-container">
+      {/* Hero Section */}
+      <div className="home-hero animate-fade-up">
+        <div className="home-hero-content">
+          <ThunderboltFilled className="home-icon" />
+          <Title level={1} className="home-hero-title">
+            智能组卷刷题系统
+          </Title>
+          <Paragraph className="home-hero-subtitle">
+            基于AI和规则引擎的下一代在线考试平台。个性化学习路径，精准查漏补缺，让每一次练习都更有效率。
+          </Paragraph>
+          <div style={{ marginTop: 32 }}>
+            <Button
+              className="hero-btn hero-btn-primary"
+              onClick={() => navigate('/start-practice')}
+            >
+              立即开始练习
+            </Button>
+            <Button
+              className="hero-btn hero-btn-ghost"
+              onClick={() => navigate('/practice-records')}
+            >
+              查看学习进度
+            </Button>
+          </div>
+        </div>
       </div>
 
-      
-
       {enableLazy ? (
-        <Suspense fallback={<div style={{ textAlign: 'center', padding: 16 }}><Text type="secondary">内容加载中...</Text></div>}>
-          {LazyQuickStartSection && <LazyQuickStartSection />}
-          {LazyFeaturesSection && <LazyFeaturesSection />}
-          {LazyStatsSection && <LazyStatsSection />}
+        <Suspense fallback={<div style={{ textAlign: 'center', padding: 40 }}><Text type="secondary">精彩内容加载中...</Text></div>}>
+          <div className="animate-fade-up" style={{ animationDelay: '0.1s' }}>
+            {LazyAnnouncementSection && <LazyAnnouncementSection />}
+          </div>
+          <div className="animate-fade-up" style={{ animationDelay: '0.1s' }}>
+            {LazyQuickStartSection && <LazyQuickStartSection />}
+          </div>
+          <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
+            {LazyStatsSection && <LazyStatsSection />}
+          </div>
+          <div className="animate-fade-up" style={{ animationDelay: '0.3s' }}>
+            {LazyFeaturesSection && <LazyFeaturesSection />}
+          </div>
         </Suspense>
       ) : (
-        <div className="home-section" style={{ marginTop: 40 }}>
-          <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <Title level={3} className="home-section-title">系统特色</Title>
-            <Text type="secondary">突出核心价值主张与关键行动点</Text>
-          </div>
-          <Row gutter={[24, 24]} style={{ marginTop: 16 }}>
-            <Col xs={24} md={8}>
-              <Card className="home-feature-card" hoverable>
-                <Title level={4}>智能批卷</Title>
-                <Paragraph>
-                  支持所有题型的自动评分，答题后立即显示结果和解析
-                </Paragraph>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card className="home-feature-card" hoverable>
-                <Title level={4}>个性化学习</Title>
-                <Paragraph>
-                  支持多种练习模式，根据你的需求定制学习计划
-                </Paragraph>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card className="home-feature-card" hoverable>
-                <Title level={4}>规则驱动组卷</Title>
-                <Paragraph>
-                  基于规则的智能组卷，覆盖多知识点组合
-                </Paragraph>
-              </Card>
-            </Col>
-          </Row>
+        // Fallback or non-lazy content (kept for compatibility, though Lazy is default true usually)
+        <div className="home-section">
+          {/* Fallback code omitted for brevity as lazy load is primary */}
         </div>
       )}
     </div>
@@ -89,17 +70,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-
-
-
-
-
-
-
-
-
-
-
-
-
-

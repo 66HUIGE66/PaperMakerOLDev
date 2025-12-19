@@ -1,0 +1,214 @@
+/* PaperGeneration.css */
+
+.paper-generation-container {
+    min-height: calc(100vh - 64px);
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.pg-glass-card {
+    width: 100%;
+    max-width: 1000px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 40px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.pg-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.pg-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.pg-subtitle {
+    color: #666;
+    font-size: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Feature Cards (Small Icons below header) */
+.pg-features {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.pg-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #555;
+    font-size: 14px;
+}
+
+.pg-feature-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #f0f5ff;
+    color: #1890ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Form Area */
+.pg-form-area {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    border: 1px solid #f0f0f0;
+}
+
+.pg-action-bar {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #f5f5f5;
+    flex-wrap: wrap;
+}
+
+/* Rule Option Styling */
+.rule-option-content {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+}
+
+.rule-option-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.rule-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #333;
+}
+
+.rule-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+/* Loading State */
+.pg-loading-container {
+    text-align: center;
+    padding: 40px 0;
+}
+
+.pg-loading-text {
+    margin-top: 16px;
+    color: #1890ff;
+    font-weight: 500;
+}
+
+/* Result Card */
+.pg-result-card {
+    background: #f6ffed;
+    border: 1px solid #b7eb8f;
+    border-radius: 16px;
+    padding: 32px;
+    margin-top: 32px;
+    animation: slideUp 0.5s ease-out;
+}
+
+.pg-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    border-bottom: 1px dashed #b7eb8f;
+    padding-bottom: 16px;
+}
+
+.pg-result-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #389e0d;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pg-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.pg-stat-item {
+    background: rgba(255, 255, 255, 0.6);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.pg-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+    margin: 8px 0;
+}
+
+.pg-stat-label {
+    font-size: 13px;
+    color: #666;
+}
+
+/* Animation */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .pg-glass-card {
+        padding: 24px;
+    }
+
+    .pg-features {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .pg-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

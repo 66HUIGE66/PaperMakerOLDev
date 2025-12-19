@@ -1,0 +1,187 @@
+/* PracticeStatisticsPage.css */
+
+.statistics-container {
+    min-height: 100vh;
+    background: var(--page-background);
+    padding: 24px;
+}
+
+/* Hero Section */
+.statistics-hero {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    position: relative;
+    z-index: 1;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+.summary-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.summary-card:hover {
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
+}
+
+.summary-card.blue:hover {
+    border-color: var(--primary-color);
+}
+
+.summary-card.green:hover {
+    border-color: var(--success-color);
+}
+
+.summary-card.orange:hover {
+    border-color: var(--warning-color);
+}
+
+.summary-card.purple:hover {
+    border-color: #722ed1;
+}
+
+.summary-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.summary-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f1f1f;
+    margin-bottom: 4px;
+}
+
+.summary-label {
+    color: #8c8c8c;
+    font-size: 14px;
+}
+
+/* Charts Grid */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+}
+
+.chart-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.chart-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f1f1f;
+    border-left: 4px solid var(--primary-color);
+    padding-left: 12px;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Custom Tabs */
+.custom-tabs .ant-tabs-nav {
+    margin-bottom: 24px;
+}
+
+.custom-tabs .ant-tabs-tab {
+    padding: 12px 24px !important;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.custom-tabs .ant-tabs-tab-active {
+    background: white;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .summary-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+}
+
+.animate-fade-up {
+    opacity: 0;
+    animation: fadeUp 0.6s ease-out forwards;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -22,7 +22,7 @@ import {
   EditOutlined,
   CopyOutlined,
   SettingOutlined,
-  EyeOutlined
+  // EyeOutlined
 } from '@ant-design/icons';
 import { API_CONFIG } from '../config/api';
 import { authService } from '../services/authService';
@@ -53,12 +53,12 @@ const RuleViewPage: React.FC = () => {
   const [rule, setRule] = useState<ExamRule | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // 检查权限
   const isAdmin = user?.role === UserRole.ADMIN;
   const isCreator = user?.id === rule?.creatorId;
   const canEdit = isAdmin || (!rule?.isSystem && isCreator);
-  
+
   console.log('权限检查:', {
     isAdmin,
     isCreator,
@@ -119,7 +119,7 @@ const RuleViewPage: React.FC = () => {
 
       const result = await response.json();
       console.log('规则加载结果:', result);
-      
+
       if (result.code === 200 && result.data) {
         const ruleData = result.data;
         console.log('规则数据:', {
@@ -326,12 +326,12 @@ const RuleViewPage: React.FC = () => {
   (ruleConfig as any).knowledgePoints = normalizeKP((ruleConfig as any).knowledgePoints);
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="page-container">
       {/* 页面头部 */}
       <div style={{ marginBottom: '24px' }}>
         <Space>
-          <Button 
-            icon={<ArrowLeftOutlined />} 
+          <Button
+            icon={<ArrowLeftOutlined />}
             onClick={() => navigate(rule.isSystem ? '/system-rules' : '/my-rules')}
           >
             返回
@@ -347,21 +347,21 @@ const RuleViewPage: React.FC = () => {
       {/* 操作按钮 */}
       <Card style={{ marginBottom: '24px' }}>
         <Space>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<EditOutlined />}
             onClick={handleEdit}
             disabled={!canEdit}
           >
             编辑规则
           </Button>
-          <Button 
+          <Button
             icon={<CopyOutlined />}
             onClick={handleCopy}
           >
             复制规则
           </Button>
-          <Button 
+          <Button
             icon={<SettingOutlined />}
             onClick={handleStatusToggle}
             disabled={!canEdit}
@@ -389,7 +389,7 @@ const RuleViewPage: React.FC = () => {
             {new Date(rule.updatedAt).toLocaleString()}
           </Descriptions.Item>
         </Descriptions>
-        
+
         {rule.description && (
           <>
             <Divider />

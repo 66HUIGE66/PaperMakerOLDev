@@ -10,12 +10,15 @@ import {
   message,
   Row,
   Col,
-  Tag
+  Upload
 } from 'antd';
-import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { Question, QuestionType, DifficultyLevel, KnowledgePoint } from '../types';
 import { generateId } from '../utils';
-import { knowledgePointApi } from '../services/api';
+import { knowledgePointApi, commonApi, questionApi } from '../services/api';
+import { authService } from '../services/authService';
+import QuestionOptions from './QuestionOptions';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -31,8 +34,71 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ question, onSave, onCancel 
   const [questionType, setQuestionType] = useState<QuestionType>(QuestionType.SINGLE_CHOICE);
   const [options, setOptions] = useState<string[]>([]);
   const [availableKnowledgePoints, setAvailableKnowledgePoints] = useState<KnowledgePoint[]>([]);
-  const [selectedKnowledgePoints, setSelectedKnowledgePoints] = useState<KnowledgePoint[]>([]);
   const [loadingKnowledgePoints, setLoadingKnowledgePoints] = useState(false);
+  const [pendingImages, setPendingImages] = useState<Map<string, File>>(new Map());
+  const [loading, setLoading] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+
+  const handleTitleBlur = async () => {
+    const title = form.getFieldValue('title');
+    if (!title || !title.trim()) {
+      setDuplicateWarning(null);
+      return;
+    }
+    // 编辑模式下，如果标题未修改，则不检查
+    if (question && question.title === title.trim()) {
+      setDuplicateWarning(null);
+      return;
+    }
+
+    try {
+      const res = await questionApi.checkDuplicates([title.trim()]);
+      if (res.data && res.data.code === 200 && res.data.object && res.data.object.length > 0) {
+        setDuplicateWarning('该题目内容已存在于题库中');
+      } else {
+        setDuplicateWarning(null);
+      }
+    } catch (e) {
+      console.error('检查重复失败:', e);
+    }
+  };
+
+  // 监听字段以实现实时预览
+  const titleValue = Form.useWatch('title', form);
+  const explanationValue = Form.useWatch('explanation', form);
+
+  // Markdown 预览组件
+  const MarkdownPreview = ({ content, label }: { content: string; label: string }) => {
+    if (!content) return null;
+    return (
+      <div style={{
+        marginTop: 8,
+        padding: '8px 12px',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 4,
+        border: '1px solid #d9d9d9'
+      }}>
+        <div style={{ fontSize: '12px', color: '#8c8c8c', marginBottom: 4 }}>{label} 预览：</div>
+        <div className="markdown-preview" style={{
+          maxWidth: '100%',
+          overflow: 'hidden',
+          lineHeight: '1.6'
+        }}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            urlTransform={(uri) => uri.startsWith('blob:') ? uri : uri}
+            components={{
+              img: ({ node, ...props }) => (
+                <img {...props} style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '8px 0' }} alt="预览图片" />
+              )
+            }}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (question) {
@@ -75,8 +141,8 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ question, onSave, onCancel 
     }
   };
 
-  const isChoiceQuestion = questionType === QuestionType.SINGLE_CHOICE || 
-                          questionType === QuestionType.MULTIPLE_CHOICE;
+  const isChoiceQuestion = questionType === QuestionType.SINGLE_CHOICE ||
+    questionType === QuestionType.MULTIPLE_CHOICE;
 
   const isFillBlankQuestion = questionType === QuestionType.FILL_BLANK;
 
@@ -106,26 +172,75 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ question, onSave, onCancel 
     }
   }, [options, isChoiceQuestion, form]);
 
+  const uploadAndReplaceImages = async (content: string) => {
+    if (!content) return content;
+    let newContent = content;
+    const urlPattern = /!\[.*?\]\((blob:.*?)\)/g;
+    const matches = Array.from(content.matchAll(urlPattern));
+
+    for (const match of matches) {
+      const tempUrl = match[1];
+      const file = pendingImages.get(tempUrl);
+      if (file) {
+        try {
+          const res = await commonApi.uploadImage(file);
+          const responseData = res.data?.object;
+          const finalUrl = typeof responseData === 'string' ? responseData : responseData?.url;
+          if (finalUrl) {
+            newContent = newContent.replace(tempUrl, finalUrl);
+          }
+        } catch (error) {
+          console.error('图片上传失败:', error);
+          throw new Error('部分图片上传失败，请稍后重试');
+        }
+      }
+    }
+    return newContent;
+  };
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      
-      const questionData: Question = {
-        id: question?.id || generateId(),
-        title: values.title,
-        type: values.type,
-        difficulty: values.difficulty,
-        knowledgePoints: values.knowledgePoints || [],
-        tags: values.tags || [],
-        options: values.options || undefined,
-        correctAnswer: values.correctAnswer,
-        explanation: values.explanation,
-        source: values.source,
-        createTime: question?.createTime || new Date().toISOString(),
-        updateTime: new Date().toISOString(),
-      };
+      setLoading(true);
 
-      onSave(questionData);
+      try {
+        // 处理图片上传
+        let finalTitle = values.title;
+        let finalExplanation = values.explanation || '';
+
+        finalTitle = await uploadAndReplaceImages(finalTitle);
+        finalExplanation = await uploadAndReplaceImages(finalExplanation);
+
+        let finalOptions = values.options;
+        if (Array.isArray(finalOptions)) {
+          finalOptions = await Promise.all(finalOptions.map(async (opt) => {
+            return await uploadAndReplaceImages(opt);
+          }));
+        }
+
+        const currentUser = authService.getCurrentUser();
+        const questionData: Question = {
+          id: question?.id || generateId(),
+          title: finalTitle,
+          type: values.type,
+          difficulty: values.difficulty,
+          knowledgePoints: values.knowledgePoints || [],
+          tags: values.tags || [],
+          options: finalOptions || undefined,
+          correctAnswer: values.correctAnswer,
+          explanation: finalExplanation,
+          source: values.source,
+          creatorId: question?.creatorId || currentUser?.id || 0,
+          createTime: question?.createTime || new Date().toISOString(),
+          updateTime: new Date().toISOString(),
+        };
+
+        onSave(questionData);
+      } catch (uploadError: any) {
+        message.error(uploadError.message || '图片上传失败');
+      } finally {
+        setLoading(false);
+      }
     } catch (error) {
       message.error('请检查表单填写是否完整');
     }
@@ -189,7 +304,28 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ question, onSave, onCancel 
       <Card title="题目内容" size="small" style={{ marginBottom: 16 }}>
         <Form.Item
           name="title"
-          label="题目"
+          label={
+            <Space>
+              <span>题目</span>
+              <Upload
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  const isImage = file.type.startsWith('image/');
+                  if (!isImage) {
+                    message.error('请上传图片文件');
+                    return false;
+                  }
+                  const tempUrl = URL.createObjectURL(file);
+                  setPendingImages(prev => new Map(prev).set(tempUrl, file));
+                  const current = form.getFieldValue('title') || '';
+                  form.setFieldsValue({ title: current + `\n![图片](${tempUrl})\n` });
+                  return false;
+                }}
+              >
+                <Button size="small" type="link">插入图片</Button>
+              </Upload>
+            </Space>
+          }
           rules={[{ required: true, message: '请输入题目内容' }]}
         >
           <TextArea
@@ -197,48 +333,29 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ question, onSave, onCancel 
             placeholder="请输入题目内容..."
             showCount
             maxLength={1000}
+            onBlur={handleTitleBlur}
           />
+          {duplicateWarning && (
+            <div style={{ color: '#faad14', marginTop: 8 }}>
+              ⚠️ {duplicateWarning}
+            </div>
+          )}
+          <MarkdownPreview content={titleValue} label="题目" />
         </Form.Item>
 
-        {isChoiceQuestion && (
-          <Form.Item
-            name="options"
-            label="选项"
-            rules={[{ required: true, message: '请添加选项' }]}
-          >
-            <Form.List name="options">
-              {(fields, { add, remove }) => (
-                <>
-                  {fields.map(({ key, name, ...restField }) => (
-                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                      <Form.Item
-                        {...restField}
-                        name={[name]}
-                        rules={[{ required: true, message: '请输入选项内容' }]}
-                        style={{ marginBottom: 0, flex: 1 }}
-                      >
-                        <Input 
-                          placeholder={`选项 ${String.fromCharCode(65 + name)}`}
-                        />
-                      </Form.Item>
-                      <MinusCircleOutlined onClick={() => remove(name)} />
-                    </Space>
-                  ))}
-                  <Form.Item>
-                    <Button
-                      type="dashed"
-                      onClick={() => add()}
-                      block
-                      icon={<PlusOutlined />}
-                    >
-                      添加选项
-                    </Button>
-                  </Form.Item>
-                </>
-              )}
-            </Form.List>
-          </Form.Item>
-        )}
+        <QuestionOptions
+          questionType={questionType}
+          value={options}
+          onChange={(newOpts) => {
+            setOptions(newOpts);
+            form.setFieldsValue({ options: newOpts });
+          }}
+          onImageSelect={(file) => {
+            const tempUrl = URL.createObjectURL(file);
+            setPendingImages(prev => new Map(prev).set(tempUrl, file));
+            return tempUrl;
+          }}
+        />
 
         {isFillBlankQuestion && (
           <Form.Item
@@ -350,7 +467,28 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ question, onSave, onCancel 
       <Card title="其他信息" size="small" style={{ marginBottom: 16 }}>
         <Form.Item
           name="explanation"
-          label="解析"
+          label={
+            <Space>
+              <span>解析</span>
+              <Upload
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  const isImage = file.type.startsWith('image/');
+                  if (!isImage) {
+                    message.error('请上传图片文件');
+                    return false;
+                  }
+                  const tempUrl = URL.createObjectURL(file);
+                  setPendingImages(prev => new Map(prev).set(tempUrl, file));
+                  const current = form.getFieldValue('explanation') || '';
+                  form.setFieldsValue({ explanation: current + `\n![解析图片](${tempUrl})\n` });
+                  return false;
+                }}
+              >
+                <Button size="small" type="link">插入图片</Button>
+              </Upload>
+            </Space>
+          }
         >
           <TextArea
             rows={3}
@@ -358,6 +496,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ question, onSave, onCancel 
             showCount
             maxLength={500}
           />
+          <MarkdownPreview content={explanationValue} label="解析" />
         </Form.Item>
 
         <Form.Item
@@ -366,7 +505,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ question, onSave, onCancel 
         >
           <Input placeholder="请输入题目来源..." />
         </Form.Item>
-      </Card>
+      </Card >
 
       <Divider />
 
@@ -375,12 +514,12 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ question, onSave, onCancel 
           <Button onClick={onCancel}>
             取消
           </Button>
-          <Button type="primary" onClick={handleSubmit}>
+          <Button type="primary" onClick={handleSubmit} loading={loading}>
             {question ? '更新' : '保存'}
           </Button>
         </Space>
       </div>
-    </Form>
+    </Form >
   );
 };
 

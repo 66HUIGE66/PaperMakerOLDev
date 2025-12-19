@@ -89,8 +89,8 @@ public class UserEntity {
      */
     public enum UserRole {
         STUDENT("学生"),
-        TEACHER("教师"),
-        ADMIN("管理员");
+        TEACHER("内容管理员"),
+        ADMIN("系统管理员");
 
         private final String description;
 

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Button, 
-  Space, 
-  message, 
-  Modal, 
-  Form, 
-  Input, 
+import {
+  Card,
+  Button,
+  Space,
+  message,
+  Modal,
+  Form,
+  Input,
   Select,
   Table,
   Tag,
@@ -21,10 +21,10 @@ import {
   Progress,
   Empty
 } from 'antd';
-import { 
-  EditOutlined, 
-  DeleteOutlined, 
-  PlusOutlined, 
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
   EyeOutlined,
   SaveOutlined,
   ArrowLeftOutlined,
@@ -35,14 +35,58 @@ import {
   TrophyOutlined,
   ReloadOutlined,
   ExportOutlined,
-  BulbOutlined
+  BulbOutlined,
+  SwapOutlined,
+  FilePdfOutlined
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { examPaperService, ExamPaper } from '../services/examPaperService';
+import { exportService } from '../services/exportService';
 import { questionService, Question } from '../services/questionService';
 import { subjectApi } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import QuestionSelector from '../components/QuestionSelector';
+import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import './PaperDetail.css';
+
+interface DraggableBodyRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  'data-row-key': string;
+}
+
+const DraggableBodyRow = ({ children, ...restProps }: DraggableBodyRowProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: restProps['data-row-key'],
+  });
+
+  const style: React.CSSProperties = {
+    ...restProps.style,
+    transform: CSS.Transform.toString(transform && { ...transform, scaleY: 1 }),
+    transition,
+    cursor: 'move',
+    ...(isDragging ? { position: 'relative', zIndex: 9999 } : {}),
+  };
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      {...restProps}
+    >
+      {children}
+    </tr>
+  );
+};
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -69,6 +113,7 @@ interface PaperQuestion {
 const PaperDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth(); // 获取当前用户
   const [paper, setPaper] = useState<ExamPaper | null>(null);
   const [paperQuestions, setPaperQuestions] = useState<PaperQuestion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -78,14 +123,18 @@ const PaperDetail: React.FC = () => {
   const [questionEditVisible, setQuestionEditVisible] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [replacingQuestionId, setReplacingQuestionId] = useState<number | null>(null);
   const [form] = Form.useForm();
   const [questionForm] = Form.useForm();
   const [subjects, setSubjects] = useState<Array<{ id: number; name: string }>>([]);
 
+  // 判断是否有编辑权限：管理员或试卷创建者
+  const canEdit = user?.role === 'ADMIN' || (paper?.creatorId && user?.id === paper.creatorId);
+
   // 获取试卷详情
   const fetchPaperDetail = async () => {
     if (!id) return;
-    
+
     setLoading(true);
     try {
       // 先尝试从系统试卷中查找
@@ -124,7 +173,7 @@ const PaperDetail: React.FC = () => {
   // 获取试卷题目列表
   const fetchPaperQuestions = async () => {
     if (!id) return;
-    
+
     try {
       const questions = await examPaperService.getPaperQuestions(parseInt(id));
       setPaperQuestions(questions);
@@ -197,7 +246,7 @@ const PaperDetail: React.FC = () => {
   // 保存试卷信息
   const handleSavePaper = async (values: any) => {
     if (!paper) return;
-    
+
     try {
       // 如果传入了学科名，需要找到对应的学科ID
       let subjectId = paper.subjectId || (paper as any).subjectId;
@@ -211,30 +260,30 @@ const PaperDetail: React.FC = () => {
           subjectId = values.subject;
         }
       }
-      
+
       // 准备更新数据
       const updateData = {
-        id: paper.id,
+        id: typeof paper.id === 'string' ? parseInt(paper.id) : paper.id,
         title: values.title,
         description: values.description,
         totalScore: values.totalScore,
         duration: values.duration,
         subjectId: subjectId
       };
-      
+
       const updatedPaper = await examPaperService.updatePaper(updateData);
-      
+
       // 更新本地状态，使用返回的数据或合并数据
       const paperWithSubject = {
         ...updatedPaper,
         subject: values.subject || updatedPaper.subject || (updatedPaper as any).subjectName
       };
-      
+
       setPaper(paperWithSubject);
-      
+
       // 刷新详情以获取最新数据
       await fetchPaperDetail();
-      
+
       setEditModalVisible(false);
       message.success('试卷信息保存成功');
     } catch (error: any) {
@@ -245,7 +294,7 @@ const PaperDetail: React.FC = () => {
   // 删除题目
   const handleDeleteQuestion = async (paperQuestionId: number) => {
     if (!id) return;
-    
+
     try {
       await examPaperService.removeQuestionFromPaper(parseInt(id), paperQuestionId);
       setPaperQuestions(prev => prev.filter(pq => pq.id !== paperQuestionId));
@@ -261,11 +310,11 @@ const PaperDetail: React.FC = () => {
   // 更新题目分数
   const handleUpdateScore = async (paperQuestionId: number, newScore: number) => {
     if (!id) return;
-    
+
     try {
       await examPaperService.updateQuestionScore(parseInt(id), paperQuestionId, newScore);
-      setPaperQuestions(prev => 
-        prev.map(pq => 
+      setPaperQuestions(prev =>
+        prev.map(pq =>
           pq.id === paperQuestionId ? { ...pq, score: newScore } : pq
         )
       );
@@ -273,8 +322,8 @@ const PaperDetail: React.FC = () => {
     } catch (error: any) {
       console.log('更新分数失败，使用本地更新:', error.message);
       // 如果API调用失败，使用本地更新
-      setPaperQuestions(prev => 
-        prev.map(pq => 
+      setPaperQuestions(prev =>
+        prev.map(pq =>
           pq.id === paperQuestionId ? { ...pq, score: newScore } : pq
         )
       );
@@ -285,7 +334,7 @@ const PaperDetail: React.FC = () => {
   // 添加题目到试卷
   const handleAddQuestion = async (questionId: number, score: number) => {
     if (!id) return;
-    
+
     try {
       await examPaperService.addQuestionToPaper(parseInt(id), questionId, score);
       message.success('题目添加成功');
@@ -315,6 +364,49 @@ const PaperDetail: React.FC = () => {
     }
   };
 
+  // 替换题目
+  const handleReplaceQuestion = async (oldQuestionId: number, newQuestionId: number, score: number) => {
+    if (!id) return;
+    try {
+      // 先删除旧题目
+      await examPaperService.removeQuestionFromPaper(parseInt(id), oldQuestionId);
+      // 再添加新题目
+      await examPaperService.addQuestionToPaper(parseInt(id), newQuestionId, score);
+
+      message.success('题目替换成功');
+      setReplacingQuestionId(null);
+      // 刷新列表
+      fetchPaperQuestions();
+    } catch (error: any) {
+      message.error('替换失败: ' + error.message);
+    }
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 1,
+      },
+    }),
+  );
+
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (active.id !== over?.id) {
+      setPaperQuestions((previous) => {
+        const activeIndex = previous.findIndex((i) => i.id === active.id);
+        const overIndex = previous.findIndex((i) => i.id === over?.id);
+
+        const newQuestions = arrayMove(previous, activeIndex, overIndex);
+        // 重新分配序号
+        newQuestions.forEach((pq, index) => {
+          pq.questionOrder = index + 1;
+        });
+        return newQuestions;
+      });
+      message.info('题目顺序已调整，请点击保存按钮保存更改');
+    }
+  };
+
   // 题目排序功能
   const handleMoveQuestion = async (paperQuestionId: number, direction: 'up' | 'down') => {
     const currentIndex = paperQuestions.findIndex(pq => pq.id === paperQuestionId);
@@ -326,7 +418,7 @@ const PaperDetail: React.FC = () => {
     // 交换题目顺序
     const newQuestions = [...paperQuestions];
     [newQuestions[currentIndex], newQuestions[newIndex]] = [newQuestions[newIndex], newQuestions[currentIndex]];
-    
+
     // 更新题目序号
     newQuestions.forEach((pq, index) => {
       pq.questionOrder = index + 1;
@@ -345,11 +437,12 @@ const PaperDetail: React.FC = () => {
 
     try {
       const questionOrders = paperQuestions.map(pq => ({
-        paperQuestionId: pq.id,
-        questionOrder: pq.questionOrder
+        questionId: pq.questionId,
+        questionOrder: pq.questionOrder,
+        score: pq.score
       }));
 
-      await examPaperService.updateQuestionOrder(paper.id, questionOrders);
+      await examPaperService.updateQuestionOrder(Number(paper.id), questionOrders);
       message.success('题目顺序保存成功');
     } catch (error: any) {
       message.error('保存失败: ' + error.message);
@@ -357,50 +450,53 @@ const PaperDetail: React.FC = () => {
   };
 
   // 导出试卷功能
-  const handleExportPaper = () => {
+  const handleExportPaper = async () => {
     if (!paper || paperQuestions.length === 0) {
       message.warning('试卷为空，无法导出');
       return;
     }
 
-    const exportData = {
-      试卷标题: paper.title,
-      试卷描述: paper.description || '无描述',
-      总分: totalScore,
-      考试时长: `${paper.duration || 0} 分钟`,
-      学科: paper.subject || '未设置',
-      创建时间: paper.createdAt ? new Date(paper.createdAt).toLocaleString() : '未知',
-      题目数量: questionCount,
-      题目列表: paperQuestions.map((pq, index) => ({
-        序号: index + 1,
-        题目: pq.title,
-        类型: pq.type === 'SINGLE_CHOICE' ? '单选题' :
-              pq.type === 'MULTIPLE_CHOICE' ? '多选题' :
-              pq.type === 'TRUE_FALSE' ? '判断题' :
-              pq.type === 'FILL_BLANK' ? '填空题' : '简答题',
-        难度: pq.difficulty === 'EASY' ? '简单' :
-              pq.difficulty === 'MEDIUM' ? '中等' : '困难',
-        学科: pq.subject,
-        分数: pq.score,
-        选项: pq.options ? (Array.isArray(pq.options) ? pq.options.join(' | ') : pq.options) : '无',
-        正确答案: pq.correctAnswer,
-        解析: pq.explanation || '无解析'
-      }))
-    };
+    try {
+      // 构造完整的 Question 对象列表用于导出
+      const questionsForExport: Question[] = paperQuestions.map(pq => ({
+        id: pq.questionId,
+        title: pq.title,
+        type: pq.type as any,
+        difficulty: pq.difficulty as any,
+        options: pq.options,
+        correctAnswer: pq.correctAnswer,
+        explanation: pq.explanation,
+        subject: pq.subject,
+        isSystem: pq.isSystem,
+        creatorId: pq.creatorId,
+        createTime: pq.createdAt,
+        updateTime: pq.updatedAt,
+        tags: [], // 补充缺少的必填字段
+        status: 'ACTIVE',
+        knowledgePoints: []
+      }));
 
-    // 创建并下载JSON文件
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${paper.title}_试卷详情.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      await exportService.exportToWord(paper, questionsForExport);
+      message.success('导出成功');
+    } catch (error) {
+      console.error('导出失败:', error);
+      message.error('导出失败');
+    }
+  };
 
-    message.success('试卷导出成功');
+  // 导出PDF
+  const handleExportPDF = async () => {
+    if (!paper) return;
+    try {
+      message.loading({ content: '正在生成PDF...', key: 'exportPdf' });
+      // 等待一点时间让隐藏的DOM渲染完成（如果有图片等）
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await exportService.exportToPDF('paper-print-view', paper.title);
+      message.success({ content: '导出PDF成功', key: 'exportPdf' });
+    } catch (error) {
+      console.error(error);
+      message.error({ content: '导出PDF失败', key: 'exportPdf' });
+    }
   };
 
   // 打开题目编辑模态框
@@ -417,12 +513,14 @@ const PaperDetail: React.FC = () => {
       subject: record.subject,
       isSystem: record.isSystem,
       creatorId: record.creatorId,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt
+      createTime: record.createdAt,
+      updateTime: record.updatedAt,
+      tags: [], // 补充缺少的必填字段
+      knowledgePoints: [] // 补充缺少的必填字段
     };
-    
+
     setEditingQuestion(question);
-    
+
     // 处理选项数据，确保是数组格式
     let optionsData = [];
     if (question.options) {
@@ -436,7 +534,7 @@ const PaperDetail: React.FC = () => {
         }
       }
     }
-    
+
     questionForm.setFieldsValue({
       title: question.title,
       type: question.type,
@@ -467,12 +565,12 @@ const PaperDetail: React.FC = () => {
 
       // 调用API更新题目
       const updatedQuestion = await questionService.updateQuestion(editingQuestion.id!, updateData);
-      try { const { subjectApi } = await import('../services/api'); await subjectApi.refreshMapping(); } catch {}
+      try { const { subjectApi } = await import('../services/api'); await subjectApi.refreshMapping(); } catch { }
 
       // 更新本地状态
-      setPaperQuestions(prev => 
-        prev.map(pq => 
-          pq.questionId === editingQuestion.id 
+      setPaperQuestions(prev =>
+        prev.map(pq =>
+          pq.questionId === editingQuestion.id
             ? { ...pq, ...updatedQuestion }
             : pq
         )
@@ -491,9 +589,9 @@ const PaperDetail: React.FC = () => {
         options: values.options || []
       };
 
-      setPaperQuestions(prev => 
-        prev.map(pq => 
-          pq.questionId === editingQuestion.id 
+      setPaperQuestions(prev =>
+        prev.map(pq =>
+          pq.questionId === editingQuestion.id
             ? { ...pq, ...updatedQuestion }
             : pq
         )
@@ -514,8 +612,8 @@ const PaperDetail: React.FC = () => {
       key: 'questionOrder',
       width: 80,
       render: (order: number) => (
-        <Badge 
-          count={order} 
+        <Badge
+          count={order}
           style={{ backgroundColor: '#1890ff' }}
           overflowCount={999}
         />
@@ -531,27 +629,27 @@ const PaperDetail: React.FC = () => {
           <Text strong style={{ fontSize: '14px' }}>{text}</Text>
           <br />
           <Space size="small" style={{ marginTop: 4 }}>
-            <Tag 
+            <Tag
               color={
                 record.type === 'SINGLE_CHOICE' ? 'blue' :
-                record.type === 'MULTIPLE_CHOICE' ? 'green' :
-                record.type === 'TRUE_FALSE' ? 'orange' :
-                record.type === 'FILL_BLANK' ? 'purple' : 'red'
+                  record.type === 'MULTIPLE_CHOICE' ? 'green' :
+                    record.type === 'TRUE_FALSE' ? 'orange' :
+                      record.type === 'FILL_BLANK' ? 'purple' : 'red'
               }
             >
               {record.type === 'SINGLE_CHOICE' ? '单选题' :
-               record.type === 'MULTIPLE_CHOICE' ? '多选题' :
-               record.type === 'TRUE_FALSE' ? '判断题' :
-               record.type === 'FILL_BLANK' ? '填空题' : '简答题'}
+                record.type === 'MULTIPLE_CHOICE' ? '多选题' :
+                  record.type === 'TRUE_FALSE' ? '判断题' :
+                    record.type === 'FILL_BLANK' ? '填空题' : '简答题'}
             </Tag>
-            <Tag 
+            <Tag
               color={
                 record.difficulty === 'EASY' ? 'green' :
-                record.difficulty === 'MEDIUM' ? 'orange' : 'red'
+                  record.difficulty === 'MEDIUM' ? 'orange' : 'red'
               }
             >
               {record.difficulty === 'EASY' ? '简单' :
-               record.difficulty === 'MEDIUM' ? '中等' : '困难'}
+                record.difficulty === 'MEDIUM' ? '中等' : '困难'}
             </Tag>
             <Tag color="default">
               {record.subject}
@@ -567,20 +665,24 @@ const PaperDetail: React.FC = () => {
       width: 120,
       render: (score: number, record: PaperQuestion) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Input
-            type="number"
-            value={score}
-            min={1}
-            max={100}
-            style={{ width: 70 }}
-            size="small"
-            onChange={(e) => {
-              const newScore = parseInt(e.target.value);
-              if (!isNaN(newScore) && newScore > 0) {
-                handleUpdateScore(record.id, newScore);
-              }
-            }}
-          />
+          {canEdit ? (
+            <Input
+              type="number"
+              value={score}
+              min={1}
+              max={100}
+              style={{ width: 70 }}
+              size="small"
+              onChange={(e) => {
+                const newScore = parseInt(e.target.value);
+                if (!isNaN(newScore) && newScore > 0) {
+                  handleUpdateScore(record.id, newScore);
+                }
+              }}
+            />
+          ) : (
+            <Text strong>{score}</Text>
+          )}
           <Text type="secondary" style={{ fontSize: '12px' }}>分</Text>
         </div>
       ),
@@ -604,51 +706,64 @@ const PaperDetail: React.FC = () => {
               }}
             />
           </Tooltip>
-          <Tooltip title="编辑题目">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              size="small"
-              style={{ padding: '4px 8px' }}
-              onClick={() => handleEditQuestion(record)}
-            />
-          </Tooltip>
-          <Tooltip title="上移">
-            <Button
-              type="text"
-              icon={<ArrowLeftOutlined />}
-              size="small"
-              style={{ padding: '4px 8px' }}
-              disabled={record.questionOrder === 1}
-              onClick={() => handleMoveQuestion(record.id, 'up')}
-            />
-          </Tooltip>
-          <Tooltip title="下移">
-            <Button
-              type="text"
-              icon={<ArrowLeftOutlined style={{ transform: 'rotate(180deg)' }} />}
-              size="small"
-              style={{ padding: '4px 8px' }}
-              disabled={record.questionOrder === paperQuestions.length}
-              onClick={() => handleMoveQuestion(record.id, 'down')}
-            />
-          </Tooltip>
-          <Popconfirm
-            title="确定要删除这个题目吗？"
-            onConfirm={() => handleDeleteQuestion(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Tooltip title="删除题目">
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                size="small"
-                style={{ padding: '4px 8px' }}
-              />
-            </Tooltip>
-          </Popconfirm>
+          {canEdit && (
+            <>
+              <Tooltip title="编辑题目">
+                <Button
+                  type="text"
+                  icon={<EditOutlined />}
+                  size="small"
+                  style={{ padding: '4px 8px' }}
+                  onClick={() => handleEditQuestion(record)}
+                />
+              </Tooltip>
+              <Tooltip title="替换题目">
+                <Button
+                  type="text"
+                  icon={<SwapOutlined />}
+                  size="small"
+                  style={{ padding: '4px 8px' }}
+                  onClick={() => setReplacingQuestionId(record.id)}
+                />
+              </Tooltip>
+              <Tooltip title="上移">
+                <Button
+                  type="text"
+                  icon={<ArrowLeftOutlined />}
+                  size="small"
+                  style={{ padding: '4px 8px' }}
+                  disabled={record.questionOrder === 1}
+                  onClick={() => handleMoveQuestion(record.id, 'up')}
+                />
+              </Tooltip>
+              <Tooltip title="下移">
+                <Button
+                  type="text"
+                  icon={<ArrowLeftOutlined style={{ transform: 'rotate(180deg)' }} />}
+                  size="small"
+                  style={{ padding: '4px 8px' }}
+                  disabled={record.questionOrder === paperQuestions.length}
+                  onClick={() => handleMoveQuestion(record.id, 'down')}
+                />
+              </Tooltip>
+              <Popconfirm
+                title="确定要删除这个题目吗？"
+                onConfirm={() => handleDeleteQuestion(record.id)}
+                okText="确定"
+                cancelText="取消"
+              >
+                <Tooltip title="删除题目">
+                  <Button
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined />}
+                    size="small"
+                    style={{ padding: '4px 8px' }}
+                  />
+                </Tooltip>
+              </Popconfirm>
+            </>
+          )}
         </Space>
       ),
     },
@@ -700,21 +815,31 @@ const PaperDetail: React.FC = () => {
                 icon={<ExportOutlined />}
                 onClick={handleExportPaper}
               >
-                导出
+                导出Word
               </Button>
               <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setQuestionSelectorVisible(true)}
+                icon={<FilePdfOutlined />}
+                onClick={handleExportPDF}
               >
-                添加题目
+                导出PDF
               </Button>
-              <Button
-                icon={<EditOutlined />}
-                onClick={() => setEditModalVisible(true)}
-              >
-                编辑试卷
-              </Button>
+              {canEdit && (
+                <>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setQuestionSelectorVisible(true)}
+                  >
+                    添加题目
+                  </Button>
+                  <Button
+                    icon={<EditOutlined />}
+                    onClick={() => setEditModalVisible(true)}
+                  >
+                    编辑试卷
+                  </Button>
+                </>
+              )}
             </Space>
           </Col>
         </Row>
@@ -730,9 +855,9 @@ const PaperDetail: React.FC = () => {
               prefix={<QuestionCircleOutlined style={{ color: '#1890ff' }} />}
               valueStyle={{ color: '#1890ff' }}
             />
-            <Progress 
-              percent={Math.min((questionCount / 20) * 100, 100)} 
-              size="small" 
+            <Progress
+              percent={Math.min((questionCount / 20) * 100, 100)}
+              size="small"
               showInfo={false}
               strokeColor="#1890ff"
             />
@@ -747,9 +872,9 @@ const PaperDetail: React.FC = () => {
               prefix={<TrophyOutlined style={{ color: '#52c41a' }} />}
               valueStyle={{ color: '#52c41a' }}
             />
-            <Progress 
-              percent={Math.min((totalScore / 150) * 100, 100)} 
-              size="small" 
+            <Progress
+              percent={Math.min((totalScore / 150) * 100, 100)}
+              size="small"
               showInfo={false}
               strokeColor="#52c41a"
             />
@@ -764,9 +889,9 @@ const PaperDetail: React.FC = () => {
               prefix={<ClockCircleOutlined style={{ color: '#fa8c16' }} />}
               valueStyle={{ color: '#fa8c16' }}
             />
-            <Progress 
-              percent={Math.min(((paper.duration || 0) / 120) * 100, 100)} 
-              size="small" 
+            <Progress
+              percent={Math.min(((paper.duration || 0) / 120) * 100, 100)}
+              size="small"
               showInfo={false}
               strokeColor="#fa8c16"
             />
@@ -806,14 +931,16 @@ const PaperDetail: React.FC = () => {
             <Text type="secondary">
               共 {questionCount} 道题目，总分 {totalScore} 分
             </Text>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              size="small"
-              onClick={handleSaveQuestionOrder}
-            >
-              保存顺序
-            </Button>
+            {canEdit && (
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                size="small"
+                onClick={handleSaveQuestionOrder}
+              >
+                保存顺序
+              </Button>
+            )}
             <Button
               type="text"
               icon={<ReloadOutlined />}
@@ -834,32 +961,43 @@ const PaperDetail: React.FC = () => {
             description="暂无题目"
             style={{ padding: '40px 0' }}
           >
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setQuestionSelectorVisible(true)}
-            >
-              添加题目
-            </Button>
+            {canEdit && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setQuestionSelectorVisible(true)}
+              >
+                添加题目
+              </Button>
+            )}
           </Empty>
         ) : (
-          <Table
-            columns={questionColumns}
-            dataSource={paperQuestions}
-            rowKey="id"
-            loading={loading}
-            pagination={false}
-            size="small"
-            scroll={{ x: 1000 }}
-            rowClassName={(_, index) => 
-              index % 2 === 0 ? 'table-row-light' : 'table-row-dark'
-            }
-          />
+          <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+            <SortableContext items={paperQuestions.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+              <Table
+                components={{
+                  body: {
+                    row: DraggableBodyRow,
+                  },
+                }}
+                columns={questionColumns}
+                dataSource={paperQuestions}
+                rowKey="id"
+                loading={loading}
+                pagination={false}
+                size="small"
+                scroll={{ x: 1000 }}
+                rowClassName={(_, index) =>
+                  index % 2 === 0 ? 'table-row-light' : 'table-row-dark'
+                }
+              />
+            </SortableContext>
+          </DndContext>
         )}
-      </Card>
+      </Card >
 
       {/* 编辑试卷信息模态框 */}
-      <Modal
+      < Modal
         title="编辑试卷信息"
         open={editModalVisible}
         onCancel={() => setEditModalVisible(false)}
@@ -912,8 +1050,8 @@ const PaperDetail: React.FC = () => {
             name="subject"
             label="学科"
           >
-            <Select 
-              placeholder="请选择学科" 
+            <Select
+              placeholder="请选择学科"
               allowClear
               showSearch
               optionFilterProp="children"
@@ -940,10 +1078,10 @@ const PaperDetail: React.FC = () => {
             </Space>
           </Form.Item>
         </Form>
-      </Modal>
+      </Modal >
 
       {/* 题目选择器模态框 */}
-      <Modal
+      < Modal
         title="添加题目"
         open={questionSelectorVisible}
         onCancel={() => setQuestionSelectorVisible(false)}
@@ -958,18 +1096,39 @@ const PaperDetail: React.FC = () => {
           }}
           onCancel={() => setQuestionSelectorVisible(false)}
         />
-      </Modal>
+      </Modal >
+
+      {/* 替换题目选择器模态框 */}
+      < Modal
+        title="替换题目"
+        open={!!replacingQuestionId}
+        onCancel={() => setReplacingQuestionId(null)}
+        footer={null}
+        width={1000}
+        destroyOnHidden
+      >
+        <QuestionSelector
+          selectionType="radio"
+          onSelect={(questionId: number, score: number) => {
+            if (replacingQuestionId) {
+              handleReplaceQuestion(replacingQuestionId, questionId, score);
+            }
+          }}
+          onCancel={() => setReplacingQuestionId(null)}
+        />
+      </Modal >
 
       {/* 题目详情模态框 */}
-      <Modal
+      < Modal
         title="题目详情"
         open={questionDetailVisible}
         onCancel={() => setQuestionDetailVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setQuestionDetailVisible(false)}>
-            关闭
-          </Button>
-        ]}
+        footer={
+          [
+            <Button key="close" onClick={() => setQuestionDetailVisible(false)}>
+              关闭
+            </Button>
+          ]}
         width={800}
         destroyOnHidden
       >
@@ -978,27 +1137,27 @@ const PaperDetail: React.FC = () => {
             <div style={{ marginBottom: 16 }}>
               <Title level={4}>{selectedQuestion.title}</Title>
               <Space size="small" style={{ marginTop: 8 }}>
-                <Tag 
+                <Tag
                   color={
                     selectedQuestion.type === 'SINGLE_CHOICE' ? 'blue' :
-                    selectedQuestion.type === 'MULTIPLE_CHOICE' ? 'green' :
-                    selectedQuestion.type === 'TRUE_FALSE' ? 'orange' :
-                    selectedQuestion.type === 'FILL_BLANK' ? 'purple' : 'red'
+                      selectedQuestion.type === 'MULTIPLE_CHOICE' ? 'green' :
+                        selectedQuestion.type === 'TRUE_FALSE' ? 'orange' :
+                          selectedQuestion.type === 'FILL_BLANK' ? 'purple' : 'red'
                   }
                 >
                   {selectedQuestion.type === 'SINGLE_CHOICE' ? '单选题' :
-                   selectedQuestion.type === 'MULTIPLE_CHOICE' ? '多选题' :
-                   selectedQuestion.type === 'TRUE_FALSE' ? '判断题' :
-                   selectedQuestion.type === 'FILL_BLANK' ? '填空题' : '简答题'}
+                    selectedQuestion.type === 'MULTIPLE_CHOICE' ? '多选题' :
+                      selectedQuestion.type === 'TRUE_FALSE' ? '判断题' :
+                        selectedQuestion.type === 'FILL_BLANK' ? '填空题' : '简答题'}
                 </Tag>
-                <Tag 
+                <Tag
                   color={
                     selectedQuestion.difficulty === 'EASY' ? 'green' :
-                    selectedQuestion.difficulty === 'MEDIUM' ? 'orange' : 'red'
+                      selectedQuestion.difficulty === 'MEDIUM' ? 'orange' : 'red'
                   }
                 >
                   {selectedQuestion.difficulty === 'EASY' ? '简单' :
-                   selectedQuestion.difficulty === 'MEDIUM' ? '中等' : '困难'}
+                    selectedQuestion.difficulty === 'MEDIUM' ? '中等' : '困难'}
                 </Tag>
                 <Tag color="default">
                   {selectedQuestion.subject}
@@ -1023,9 +1182,9 @@ const PaperDetail: React.FC = () => {
             {/* 简答题和填空题的答案美化 */}
             {(selectedQuestion.type === 'SHORT_ANSWER' || selectedQuestion.type === 'FILL_BLANK') ? (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ 
-                  marginBottom: 12, 
-                  fontSize: '14px', 
+                <div style={{
+                  marginBottom: 12,
+                  fontSize: '14px',
                   fontWeight: 'bold',
                   color: '#1890ff',
                   display: 'flex',
@@ -1042,7 +1201,7 @@ const PaperDetail: React.FC = () => {
                   padding: '16px',
                   minHeight: '80px'
                 }}>
-                  <Text style={{ 
+                  <Text style={{
                     fontSize: '15px',
                     lineHeight: '1.8',
                     whiteSpace: 'pre-wrap',
@@ -1064,24 +1223,24 @@ const PaperDetail: React.FC = () => {
             )}
 
             {selectedQuestion.explanation && (
-              <div style={{ 
-                backgroundColor: '#fff7e6', 
+              <div style={{
+                backgroundColor: '#fff7e6',
                 border: '2px solid #ffd591',
                 borderRadius: '8px',
                 padding: '16px',
                 marginTop: '16px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
               }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
                   marginBottom: '12px',
                   gap: '8px'
                 }}>
                   <BulbOutlined style={{ fontSize: '18px', color: '#fa8c16' }} />
                   <Title level={5} style={{ margin: 0, color: '#fa8c16' }}>题目解析</Title>
                 </div>
-                <Text style={{ 
+                <Text style={{
                   fontSize: '15px',
                   lineHeight: '1.8',
                   color: '#595959',
@@ -1095,25 +1254,27 @@ const PaperDetail: React.FC = () => {
             )}
           </div>
         )}
-      </Modal>
+      </Modal >
 
       {/* 题目编辑模态框 */}
-      <Modal
+      < Modal
         title={
-          <div>
+          < div >
             <EditOutlined style={{ marginRight: 8, color: '#1890ff' }} />
             编辑题目
-            {editingQuestion && (
-              <div style={{ fontSize: '12px', color: '#666', fontWeight: 'normal', marginTop: 4 }}>
-                题目ID: {editingQuestion.id} | 当前类型: {
-                  editingQuestion.type === 'SINGLE_CHOICE' ? '单选题' :
-                  editingQuestion.type === 'MULTIPLE_CHOICE' ? '多选题' :
-                  editingQuestion.type === 'TRUE_FALSE' ? '判断题' :
-                  editingQuestion.type === 'FILL_BLANK' ? '填空题' : '简答题'
-                }
-              </div>
-            )}
-          </div>
+            {
+              editingQuestion && (
+                <div style={{ fontSize: '12px', color: '#666', fontWeight: 'normal', marginTop: 4 }}>
+                  题目ID: {editingQuestion.id} | 当前类型: {
+                    editingQuestion.type === 'SINGLE_CHOICE' ? '单选题' :
+                      editingQuestion.type === 'MULTIPLE_CHOICE' ? '多选题' :
+                        editingQuestion.type === 'TRUE_FALSE' ? '判断题' :
+                          editingQuestion.type === 'FILL_BLANK' ? '填空题' : '简答题'
+                  }
+                </div>
+              )
+            }
+          </div >
         }
         open={questionEditVisible}
         onCancel={() => {
@@ -1237,8 +1398,55 @@ const PaperDetail: React.FC = () => {
             </Space>
           </Form.Item>
         </Form>
-      </Modal>
-    </div>
+      </Modal >
+
+      {/* 隐藏的打印视图，用于导出PDF */}
+      <div id="paper-print-view" style={{ position: 'absolute', top: -10000, left: -10000, width: '210mm', padding: '20mm', background: 'white', color: 'black' }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 10px 0' }}>{paper.title}</h1>
+          <p style={{ margin: 0 }}>总分: {paper.totalScore}分    时长: {paper.duration}分钟</p>
+          {paper.description && <p style={{ fontStyle: 'italic', margin: '10px 0 0 0' }}>{paper.description}</p>}
+        </div>
+        <div style={{ borderTop: '2px solid #000', margin: '20px 0' }} />
+        {['SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'TRUE_FALSE', 'FILL_BLANK', 'SHORT_ANSWER'].map((type) => {
+          const typeNameMap: any = {
+            'SINGLE_CHOICE': '一、单选题',
+            'MULTIPLE_CHOICE': '二、多选题',
+            'TRUE_FALSE': '三、判断题',
+            'FILL_BLANK': '四、填空题',
+            'SHORT_ANSWER': '五、简答题'
+          };
+          const typeQuestions = paperQuestions.filter(q => q.type === type);
+          if (typeQuestions.length === 0) return null;
+
+          return (
+            <div key={type} style={{ marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>{typeNameMap[type]}</h3>
+              {typeQuestions.sort((a, b) => a.questionOrder - b.questionOrder).map((q, index) => (
+                <div key={q.id} style={{ marginBottom: '15px' }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                    {index + 1}. {q.title} <span style={{ fontWeight: 'normal' }}>({q.score}分)</span>
+                  </div>
+                  {(type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE') && q.options && (
+                    <div style={{ paddingLeft: '20px' }}>
+                      {(Array.isArray(q.options) ? q.options : []).map((opt: any, optIndex: number) => (
+                        <div key={optIndex} style={{ margin: '5px 0' }}>
+                          {String.fromCharCode(65 + optIndex)}. {opt}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {/* 为填空题和简答题留出空白区域 */}
+                  {(type === 'FILL_BLANK' || type === 'SHORT_ANSWER') && (
+                    <div style={{ height: '50px' }}></div>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div >
   );
 };
 

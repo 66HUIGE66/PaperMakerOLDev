@@ -69,7 +69,7 @@ public class ExamRecordEntity {
      * 得分
      */
     @TableField("score")
-    private Integer score;
+    private Double score;
 
     /**
      * 总分

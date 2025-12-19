@@ -1,622 +1,280 @@
-.ai-assistant-page {
-  padding: 24px;
-  height: 100%;
+/* AIAssistantPage.css */
+
+.ai-container {
+  height: calc(100vh - 64px);
+  /* Adjust based on navbar height if needed */
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
 }
 
-.ai-assistant-header {
+.ai-glass-card {
+  width: 100%;
+  max-width: 1200px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Header */
+.ai-header {
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  z-index: 10;
 }
 
-.chat-container {
-  height: 500px;
+.ai-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-status-badge {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.ai-status-badge.available {
+  background: #f6ffed;
+  color: #52c41a;
+  border: 1px solid #b7eb8f;
+}
+
+.ai-status-badge.unavailable {
+  background: #fff1f0;
+  color: #ff4d4f;
+  border: 1px solid #ffccc7;
+}
+
+/* Chat Area */
+.chat-messages-area {
+  flex: 1;
   overflow-y: auto;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  background: #fafafa;
+  padding: 24px;
+  scroll-behavior: smooth;
+  background: transparent;
 }
 
-.messages-list {
+.messages-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-.message-item {
+.message-bubble {
+  display: flex;
+  gap: 16px;
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+.message-bubble.user {
+  flex-direction: row-reverse;
+}
+
+.avatar-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.bot-avatar {
+  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+  color: white;
+  font-size: 20px;
+}
+
+.user-avatar {
+  background: linear-gradient(135deg, #722ed1 0%, #eb2f96 100%);
+  color: white;
+  font-size: 20px;
+}
+
+.message-content-wrapper {
+  max-width: 80%;
+}
+
+.message-content-box {
+  padding: 16px 20px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.6;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  word-break: break-word;
+}
+
+.message-bubble.assistant .message-content-box {
+  background: white;
+  color: #1f1f1f;
+  border-top-left-radius: 4px;
+}
+
+.message-bubble.user .message-content-box {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: white;
+  border-top-right-radius: 4px;
+}
+
+.message-timestamp {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.message-bubble.user .message-timestamp {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Input Area */
+.input-section {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quick-actions-bar {
   display: flex;
   gap: 12px;
-  animation: fadeIn 0.3s ease-in;
+  overflow-x: auto;
+  padding-bottom: 8px;
 }
 
-@keyframes fadeIn {
+.quick-action-btn {
+  border-radius: 20px !important;
+  font-size: 13px !important;
+  background: rgba(24, 144, 255, 0.05) !important;
+  border: 1px solid rgba(24, 144, 255, 0.2) !important;
+  color: #1890ff !important;
+}
+
+.quick-action-btn:hover {
+  background: rgba(24, 144, 255, 0.1) !important;
+}
+
+.chat-input-wrapper {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  padding: 8px 16px 8px 16px;
+  border: 1px solid #d9d9d9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s;
+}
+
+.chat-input-wrapper:focus-within {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.custom-textarea {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 8px 0 !important;
+  resize: none !important;
+  background: transparent !important;
+}
+
+.send-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+}
+
+/* Collapsible Panel for Complex Actions */
+.tools-panel {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #eee;
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Animations */
+@keyframes messageSlideIn {
   from {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.user-message {
-  flex-direction: row-reverse;
-}
-
-.user-message .message-content {
-  background: #1890ff;
-  color: white;
-  border-radius: 12px 12px 4px 12px;
-  padding: 12px 16px;
-  max-width: 70%;
-}
-
-.assistant-message .message-content {
-  background: white;
-  border: 1px solid #e8e8e8;
-  border-radius: 12px 12px 12px 4px;
-  padding: 12px 16px;
-  max-width: 70%;
-  white-space: normal;
-}
-
-.message-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #f0f0f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.user-message .message-avatar {
-  background: #1890ff;
-  color: white;
-}
-
-.assistant-message .message-avatar {
-  background: #e6f7ff;
-  color: #1890ff;
-}
-
-.message-time {
-  font-size: 12px;
-  color: #999;
-  margin-top: 4px;
-}
-
-.user-message .message-time {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.input-container {
-  border-top: 1px solid #f0f0f0;
-  padding-top: 16px;
-}
-
-/* 移动端优化 */
-@media (max-width: 768px) {
-  .user-message .message-content,
-  .assistant-message .message-content {
-    max-width: 90%;
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    height: 0;
   }
 
-  .message-avatar {
-    width: 32px;
-    height: 32px;
-  }
-
-  .chat-container {
-    height: calc(100vh - 220px);
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    height: auto;
   }
 }
 
-/* Markdown样式 */
-.markdown-content {
-  line-height: 1.8;
-  color: #333;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: normal;
-  /* 确保Markdown内容正确渲染 */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
-
-/* 确保Markdown内容不被当作纯文本处理 */
-.markdown-content * {
-  white-space: normal !important;
-}
-
-/* 确保所有Markdown元素正确显示 */
-.markdown-content h1,
-.markdown-content h2,
-.markdown-content h3,
-.markdown-content h4,
-.markdown-content h5,
-.markdown-content h6,
-.markdown-content p,
-.markdown-content ul,
-.markdown-content ol,
-.markdown-content li,
-.markdown-content table,
-.markdown-content blockquote {
-  display: block;
-  white-space: normal !important;
-}
-
-/* 标题样式 - 参考图片1的简洁风格 */
-.markdown-content > h2,
-.markdown-content h2 {
-  background: #fff !important;
-  color: #262626 !important;
-  padding: 16px 0 12px 0 !important;
-  border-bottom: 2px solid #1890ff !important;
-  margin: 32px 0 20px 0 !important;
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  border-left: none !important;
-  border-right: none !important;
-  border-top: none !important;
-  display: block !important;
-}
-
-.markdown-content > h2:first-child {
-  margin-top: 0;
-  padding-top: 0;
-}
-
-/* 列表样式 - 参考图片1的简洁风格 */
-.markdown-content > ul,
-.markdown-content ul {
-  background: #fff !important;
-  border-left: none !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  margin: 16px 0 !important;
-  box-shadow: none !important;
-  list-style: none !important;
-  padding-left: 0 !important;
-}
-
-.markdown-content > ul > li,
-.markdown-content ul > li {
-  padding: 10px 0 !important;
-  font-size: 15px !important;
-  line-height: 1.8 !important;
-  color: #333 !important;
-  border-bottom: 1px solid #f0f0f0 !important;
-  list-style: none !important;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-}
-
-.markdown-content > ul > li:last-child,
-.markdown-content ul > li:last-child {
-  border-bottom: none !important;
-}
-
-/* 关键数据高亮 - 参考图片1的浅蓝色背景 */
-.markdown-content strong {
-  background: #e6f7ff;
-  padding: 2px 6px;
-  border-radius: 3px;
-  color: #1890ff;
-  font-weight: 600;
-  font-size: 1.05em;
-  border: 1px solid #91d5ff;
-}
-
-.markdown-content > *:first-child {
-  margin-top: 0 !important;
-}
-
-.markdown-content > *:last-child {
-  margin-bottom: 0 !important;
-}
-
-.markdown-content h1,
-.markdown-content h2,
-.markdown-content h3,
-.markdown-content h4,
-.markdown-content h5,
-.markdown-content h6 {
-  margin-top: 24px;
-  margin-bottom: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: #262626;
-}
-
-.markdown-content h1 {
-  font-size: 28px;
-  border-bottom: 2px solid #e8e8e8;
-  padding-bottom: 10px;
-  margin-top: 0;
-}
-
-.markdown-content h2 {
-  font-size: 22px !important;
-  border-bottom: 2px solid #1890ff !important;
-  padding: 16px 0 12px 0 !important;
-  margin: 32px 0 20px 0 !important;
-  background: #fff !important;
-  color: #262626 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  font-weight: 700 !important;
-  border-left: none !important;
-  border-right: none !important;
-  border-top: none !important;
-}
-
-.markdown-content h2:first-child {
-  margin-top: 0;
-}
-
-.markdown-content h3 {
-  font-size: 20px;
-  margin-top: 24px;
-}
-
-.markdown-content h4 {
-  font-size: 18px;
-  margin-top: 20px;
-}
-
-.markdown-content h5 {
-  font-size: 16px;
-  margin-top: 16px;
-}
-
-.markdown-content h6 {
-  font-size: 14px;
-  margin-top: 16px;
-  color: #595959;
-}
-
-.markdown-content p {
+/* Markdown Styles Override for Chat */
+.message-content-box.ai-content table {
+  width: 100%;
+  border-collapse: collapse;
   margin: 12px 0;
-  line-height: 1.8;
-  color: #333;
-  font-size: 15px;
+  font-size: 14px;
 }
 
-.markdown-content ol {
-  margin: 16px 0;
-  padding-left: 0;
-  line-height: 1.8;
-  background: #fff;
-  border-left: none;
-  padding: 0;
-  border-radius: 0;
-  box-shadow: none;
-  list-style: none;
+.message-content-box.ai-content th {
+  background: #f0f5ff;
+  padding: 8px;
+  border: 1px solid #d9d9d9;
+  color: #1f1f1f;
 }
 
-.markdown-content ol li {
-  margin: 10px 0;
-  line-height: 1.8;
-  font-size: 15px;
-  padding: 8px 0;
-  color: #333;
-  list-style: decimal;
+.message-content-box.ai-content td {
+  padding: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.message-content-box.ai-content ul {
   padding-left: 20px;
 }
 
-.markdown-content li:first-child {
-  margin-top: 0;
-}
-
-.markdown-content li:last-child {
-  margin-bottom: 0;
-}
-
-.markdown-content ul li {
-  list-style-type: disc;
-}
-
-.markdown-content ol li {
-  list-style-type: decimal;
-}
-
-.markdown-content ul ul,
-.markdown-content ol ol,
-.markdown-content ul ol,
-.markdown-content ol ul {
-  margin: 4px 0;
-}
-
-.markdown-content strong {
-  background: #e6f7ff;
-  padding: 2px 6px;
-  border-radius: 3px;
-  color: #1890ff;
-  font-weight: 600;
-  font-size: 1.05em;
-  display: inline-block;
-  margin: 0 2px;
-  border: 1px solid #91d5ff;
-}
-
-.markdown-content em {
-  font-style: italic;
-  color: #595959;
-}
-
-.markdown-content code {
-  background: #f5f5f5;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 0.9em;
-  color: #e83e8c;
-  border: 1px solid #e8e8e8;
-}
-
-.markdown-content pre {
-  background: #f5f5f5;
-  padding: 16px;
-  border-radius: 6px;
-  overflow-x: auto;
-  margin: 16px 0;
-  border: 1px solid #e8e8e8;
-  line-height: 1.6;
-}
-
-.markdown-content pre code {
-  background: none;
-  padding: 0;
-  border: none;
-  color: #333;
-  font-size: 0.9em;
-}
-
-.markdown-content blockquote {
-  border-left: 4px solid #1890ff;
-  padding: 16px 20px;
-  margin: 20px 0;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f7ff 100%);
-  color: #595959;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
-  font-style: italic;
-}
-
-.markdown-content blockquote p {
-  margin: 0;
-}
-
-/* 表格样式 - 参考图片1的格式 */
-.markdown-content table,
-.table-container table,
-.table-wrapper table {
-  border-collapse: collapse !important;
-  width: 100% !important;
-  margin: 20px 0 !important;
-  border: 1px solid #e8e8e8 !important;
-  border-radius: 0 !important;
-  overflow: hidden !important;
-  box-shadow: none !important;
-  background: white !important;
-  display: table !important;
-  table-layout: fixed !important; /* 固定表格布局，确保对齐 */
-}
-
-.markdown-content table th,
-.markdown-content table td,
-.table-container table th,
-.table-container table td,
-.table-wrapper table th,
-.table-wrapper table td {
-  border: 1px solid #e8e8e8 !important;
-  padding: 12px 16px !important;
-  text-align: center !important;
-  line-height: 1.6 !important;
-  display: table-cell !important;
-  vertical-align: middle !important; /* 垂直居中对齐 */
-  word-wrap: break-word !important; /* 自动换行 */
-  box-sizing: border-box !important; /* 包含边框和内边距 */
-}
-
-/* 增强表格单元格样式，确保在各种情况下都能正确显示 */
-.markdown-content th,
-.markdown-content td,
-.table-container th,
-.table-container td,
-.table-wrapper th,
-.table-wrapper td {
-  border: 1px solid #e8e8e8 !important;
-  padding: 12px 16px !important;
-  text-align: center !important;
-  line-height: 1.6 !important;
-  vertical-align: middle !important;
-  word-wrap: break-word !important;
-  box-sizing: border-box !important;
-}
-
-.markdown-content table th,
-.table-container table th,
-.table-wrapper table th {
-  background: #f5f5f5 !important;
-  font-weight: 600 !important;
-  color: #262626 !important;
-  text-align: center !important;
-  border-bottom: 2px solid #e8e8e8 !important;
-}
-
-.markdown-content table td,
-.table-container table td,
-.table-wrapper table td {
-  text-align: center !important;
-  color: #333 !important;
-}
-
-.markdown-content table tr,
-.table-container table tr,
-.table-wrapper table tr {
-  display: table-row !important;
-}
-
-.markdown-content table thead,
-.table-container table thead,
-.table-wrapper table thead {
-  display: table-header-group !important;
-}
-
-.markdown-content table tbody,
-.table-container table tbody,
-.table-wrapper table tbody {
-  display: table-row-group !important;
-}
-
-.markdown-content table tr:nth-child(even),
-.table-container table tr:nth-child(even),
-.table-wrapper table tr:nth-child(even) {
-  background: #fafafa !important;
-}
-
-.markdown-content table tr:nth-child(odd),
-.table-container table tr:nth-child(odd),
-.table-wrapper table tr:nth-child(odd) {
-  background: #fff !important;
-}
-
-.markdown-content table tr:hover,
-.table-container table tr:hover,
-.table-wrapper table tr:hover {
-  background: #f0f7ff !important;
-  transition: background 0.2s;
-}
-
-/* 表格容器和包装器样式 */
-.table-container,
-.table-wrapper {
-  overflow-x: auto;
-  margin: 20px 0;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
-  background: white;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  display: block;
-}
-
-/* 确保表格容器内的表格正确显示 */
-.table-container table,
-.table-wrapper table {
-  min-width: 100%;
-  width: auto !important;
-}
-
-/* 确保表格样式优先级更高 */
-.ai-assistant-page .message-content .markdown-content table,
-.ai-assistant-page .message-content .markdown-content table.markdown-table,
-.table-container .markdown-content table,
-.table-container .markdown-content table.markdown-table,
-.table-wrapper table,
-.table-wrapper table.markdown-table {
-  border-collapse: collapse !important;
-  width: 100% !important;
-  margin: 20px 0 !important;
-  border: 1px solid #e8e8e8 !important;
-  border-radius: 0 !important;
-  overflow: hidden !important;
-  box-shadow: none !important;
-  background: white !important;
-  display: table !important;
-}
-
-.ai-assistant-page .message-content .markdown-content table th,
-.ai-assistant-page .message-content .markdown-content table td,
-.ai-assistant-page .message-content .markdown-content table th.markdown-th,
-.ai-assistant-page .message-content .markdown-content table td.markdown-td,
-.table-container .markdown-content table th,
-.table-container .markdown-content table td,
-.table-container .markdown-content table th.markdown-th,
-.table-container .markdown-content table td.markdown-td,
-.table-wrapper table th,
-.table-wrapper table td,
-.table-wrapper table th.markdown-th,
-.table-wrapper table td.markdown-td {
-  border: 1px solid #e8e8e8 !important;
-  padding: 12px 16px !important;
-  text-align: left !important;
-  line-height: 1.6 !important;
-  display: table-cell !important;
-}
-
-.ai-assistant-page .message-content .markdown-content table th,
-.ai-assistant-page .message-content .markdown-content table th.markdown-th,
-.table-container .markdown-content table th,
-.table-container .markdown-content table th.markdown-th,
-.table-wrapper table th,
-.table-wrapper table th.markdown-th {
-  background: #f5f5f5 !important;
-  font-weight: 600 !important;
-  color: #262626 !important;
-  text-align: center !important;
-  border-bottom: 2px solid #e8e8e8 !important;
-}
-
-.ai-assistant-page .message-content .markdown-content table td,
-.ai-assistant-page .message-content .markdown-content table td.markdown-td,
-.table-container .markdown-content table td,
-.table-container .markdown-content table td.markdown-td,
-.table-wrapper table td,
-.table-wrapper table td.markdown-td {
-  text-align: left !important;
-  color: #333 !important;
-}
-
-.ai-assistant-page .message-content .markdown-content table tr:nth-child(even),
-.table-container .markdown-content table tr:nth-child(even),
-.table-wrapper table tr:nth-child(even) {
-  background: #fafafa !important;
-}
-
-.ai-assistant-page .message-content .markdown-content table tr:nth-child(odd),
-.table-container .markdown-content table tr:nth-child(odd),
-.table-wrapper table tr:nth-child(odd) {
-  background: #fff !important;
-}
-
-.ai-assistant-page .message-content .markdown-content table tr:hover,
-.table-container .markdown-content table tr:hover,
-.table-wrapper table tr:hover {
-  background: #f0f7ff !important;
-  transition: background 0.2s;
-}
-
-/* 正确率颜色编码 */
-.markdown-content table td:last-child {
-  font-weight: 600;
-}
-
-.markdown-content table td:last-child:contains('%') {
-  color: #52c41a;
-}
-
-.markdown-content hr {
-  border: none;
-  border-top: 2px solid #e8e8e8;
-  margin: 24px 0;
-}
-
-.markdown-content a {
-  color: #1890ff;
-  text-decoration: none;
-}
-
-.markdown-content a:hover {
-  text-decoration: underline;
+.message-content-box.ai-content h1,
+.message-content-box.ai-content h2,
+.message-content-box.ai-content h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: #1f1f1f;
 }

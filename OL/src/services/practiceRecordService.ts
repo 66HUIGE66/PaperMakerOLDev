@@ -257,7 +257,7 @@ export const practiceRecordService = {
   },
 
   // 批量保存答题记录
-  async saveAnswerBatch(examRecordId: number, answers: Array<{questionId: number; questionType?: string; userAnswer: any; isCorrect: boolean; timeSpent: number}>): Promise<void> {
+  async saveAnswerBatch(examRecordId: number, answers: Array<{ questionId: number; questionType?: string; userAnswer: any; isCorrect: boolean; timeSpent: number }>): Promise<void> {
     try {
       const payload = {
         examRecordId,
@@ -282,14 +282,14 @@ export const practiceRecordService = {
   },
 
   // 获取某次练习的答题记录
-  async getAnswersByExamRecordId(examRecordId: number): Promise<Array<{id:number; questionId:number; userAnswer:string; isCorrect:boolean; timeSpent:number}>> {
+  async getAnswersByExamRecordId(examRecordId: number): Promise<Array<{ id: number; questionId: number; userAnswer: string; isCorrect: boolean; timeSpent: number }>> {
     try {
       const response = await apiClient.get(`/answer-record/by-exam/${examRecordId}`);
       if (response.data.code === 200) {
         return response.data.object || [];
       }
       throw new Error(response.data.message || '获取答题记录失败');
-    } catch (error:any) {
+    } catch (error: any) {
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
@@ -403,6 +403,23 @@ export const practiceRecordService = {
         throw new Error(error.response.data.message);
       }
       throw new Error('获取学科知识点统计失败，请检查网络连接');
+    }
+  },
+
+  // 获取错题集
+  async getWrongQuestions(): Promise<Array<any>> {
+    try {
+      const response = await apiClient.get('/exam-record/wrong-questions');
+      if (response.data.code === 200) {
+        return response.data.object || [];
+      } else {
+        throw new Error(response.data.message || '获取错题集失败');
+      }
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('获取错题集失败，请检查网络连接');
     }
   }
 };

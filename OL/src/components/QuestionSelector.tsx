@@ -24,9 +24,10 @@ const { Option } = Select;
 interface QuestionSelectorProps {
   onSelect: (questionId: number, score: number) => void;
   onCancel: () => void;
+  selectionType?: 'checkbox' | 'radio';
 }
 
-const QuestionSelector: React.FC<QuestionSelectorProps> = ({ onSelect, onCancel }) => {
+const QuestionSelector: React.FC<QuestionSelectorProps> = ({ onSelect, onCancel, selectionType = 'checkbox' }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(new Set());
@@ -42,7 +43,7 @@ const QuestionSelector: React.FC<QuestionSelectorProps> = ({ onSelect, onCancel 
     try {
       // 使用专门的方法获取所有题目
       const allQuestions = await questionService.getAllQuestionsForSelector();
-      
+
       // 确保数据是数组格式
       const questionsArray = Array.isArray(allQuestions) ? allQuestions : [];
       setQuestions(questionsArray);
@@ -66,7 +67,7 @@ const QuestionSelector: React.FC<QuestionSelectorProps> = ({ onSelect, onCancel 
     const matchesType = !typeFilter || question.type === typeFilter;
     const matchesDifficulty = !difficultyFilter || question.difficulty === difficultyFilter;
     const matchesSubject = !subjectFilter || question.subject === subjectFilter;
-    
+
     return matchesSearch && matchesType && matchesDifficulty && matchesSubject;
   });
 
@@ -101,31 +102,29 @@ const QuestionSelector: React.FC<QuestionSelectorProps> = ({ onSelect, onCancel 
           <Text strong style={{ fontSize: '14px' }}>{text}</Text>
           <br />
           <Space size="small" style={{ marginTop: 4 }}>
-            <Tag 
+            <Tag
               color={
                 record.type === 'SINGLE_CHOICE' ? 'blue' :
-                record.type === 'MULTIPLE_CHOICE' ? 'green' :
-                record.type === 'TRUE_FALSE' ? 'orange' :
-                record.type === 'FILL_BLANK' ? 'purple' : 'red'
+                  record.type === 'MULTIPLE_CHOICE' ? 'green' :
+                    record.type === 'TRUE_FALSE' ? 'orange' :
+                      record.type === 'FILL_BLANK' ? 'purple' : 'red'
               }
-              size="small"
             >
               {record.type === 'SINGLE_CHOICE' ? '单选题' :
-               record.type === 'MULTIPLE_CHOICE' ? '多选题' :
-               record.type === 'TRUE_FALSE' ? '判断题' :
-               record.type === 'FILL_BLANK' ? '填空题' : '简答题'}
+                record.type === 'MULTIPLE_CHOICE' ? '多选题' :
+                  record.type === 'TRUE_FALSE' ? '判断题' :
+                    record.type === 'FILL_BLANK' ? '填空题' : '简答题'}
             </Tag>
-            <Tag 
+            <Tag
               color={
                 record.difficulty === 'EASY' ? 'green' :
-                record.difficulty === 'MEDIUM' ? 'orange' : 'red'
+                  record.difficulty === 'MEDIUM' ? 'orange' : 'red'
               }
-              size="small"
             >
               {record.difficulty === 'EASY' ? '简单' :
-               record.difficulty === 'MEDIUM' ? '中等' : '困难'}
+                record.difficulty === 'MEDIUM' ? '中等' : '困难'}
             </Tag>
-            <Tag color="default" size="small">
+            <Tag color="default">
               {record.subject}
             </Tag>
           </Space>
@@ -280,17 +279,29 @@ const QuestionSelector: React.FC<QuestionSelectorProps> = ({ onSelect, onCancel 
             }}
             size="small"
             rowSelection={{
+              type: selectionType,
               selectedRowKeys: Array.from(selectedQuestions),
               onChange: (selectedRowKeys) => {
-                const newSelected = new Set(selectedRowKeys as number[]);
-                setSelectedQuestions(newSelected);
-                
-                // 更新分数
-                const newScores: { [key: number]: number } = {};
-                selectedRowKeys.forEach(id => {
-                  newScores[id as number] = scores[id as number] || 10;
-                });
-                setScores(newScores);
+                // If radio mode, only allow one selection
+                if (selectionType === 'radio' && selectedRowKeys.length > 0) {
+                  const lastSelected = selectedRowKeys[selectedRowKeys.length - 1];
+                  const newSelected = new Set([lastSelected as number]);
+                  setSelectedQuestions(newSelected);
+
+                  const newScores: { [key: number]: number } = {};
+                  newScores[lastSelected as number] = scores[lastSelected as number] || 10;
+                  setScores(newScores);
+                } else {
+                  const newSelected = new Set(selectedRowKeys as number[]);
+                  setSelectedQuestions(newSelected);
+
+                  // 更新分数
+                  const newScores: { [key: number]: number } = {};
+                  selectedRowKeys.forEach(id => {
+                    newScores[id as number] = scores[id as number] || 10;
+                  });
+                  setScores(newScores);
+                }
               },
             }}
           />

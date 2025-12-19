@@ -19,7 +19,7 @@ const Login: React.FC = () => {
       clearError();
       await login(values);
       message.success('登录成功！');
-      
+
       // 获取重定向地址，如果没有则跳转到首页
       const from = searchParams.get('from');
       navigate(from || '/');
@@ -36,202 +36,79 @@ const Login: React.FC = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: `
-        radial-gradient(circle at 25% 25%, #ff6b6b 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, #4ecdc4 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, #45b7d1 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, #f9ca24 0%, transparent 50%),
-        radial-gradient(circle at 20% 80%, #f0932b 0%, transparent 50%),
-        linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)
-      `,
+      background: 'linear-gradient(135deg, #f0f2f5 0%, #e6f7ff 100%)',
       padding: '20px',
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* 动态背景粒子 */}
+      {/* 装饰背景圆 */}
       <div style={{
         position: 'absolute',
-        top: '0',
-        left: '0',
-        width: '100%',
-        height: '100%',
-        background: `
-          radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
-          radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
-          radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent),
-          radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.3), transparent),
-          radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,0.2), transparent)
-        `,
-        backgroundRepeat: 'repeat',
-        backgroundSize: '200px 100px',
-        animation: 'sparkle 20s linear infinite'
-      }} />
-      
-      {/* 大型装饰元素 */}
-      <div style={{
-        position: 'absolute',
-        top: '-50%',
-        left: '-50%',
-        width: '200%',
-        height: '200%',
-        background: `
-          conic-gradient(from 0deg at 50% 50%, 
-            rgba(255,107,107,0.1) 0deg,
-            rgba(78,205,196,0.1) 72deg,
-            rgba(69,183,209,0.1) 144deg,
-            rgba(249,202,36,0.1) 216deg,
-            rgba(240,147,43,0.1) 288deg,
-            rgba(255,107,107,0.1) 360deg
-          )
-        `,
-        animation: 'rotate 30s linear infinite'
-      }} />
-      
-      {/* 浮动装饰球 */}
-      <div style={{
-        position: 'absolute',
-        top: '15%',
-        left: '10%',
-        width: '120px',
-        height: '120px',
-        background: 'linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05))',
+        top: '-10%',
+        right: '-5%',
+        width: '600px',
+        height: '600px',
         borderRadius: '50%',
-        filter: 'blur(1px)',
-        animation: 'float1 8s ease-in-out infinite',
-        boxShadow: '0 0 50px rgba(255,255,255,0.3)'
+        background: 'radial-gradient(circle, rgba(24,144,255,0.1) 0%, rgba(24,144,255,0.02) 70%, transparent 100%)',
       }} />
       <div style={{
         position: 'absolute',
-        top: '70%',
-        right: '20%',
-        width: '80px',
-        height: '80px',
-        background: 'linear-gradient(45deg, rgba(255,255,255,0.15), rgba(255,255,255,0.03))',
+        bottom: '-10%',
+        left: '-10%',
+        width: '500px',
+        height: '500px',
         borderRadius: '50%',
-        filter: 'blur(1px)',
-        animation: 'float2 12s ease-in-out infinite',
-        boxShadow: '0 0 40px rgba(255,255,255,0.2)'
+        background: 'radial-gradient(circle, rgba(24,144,255,0.08) 0%, rgba(24,144,255,0.02) 70%, transparent 100%)',
       }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '25%',
-        left: '15%',
-        width: '60px',
-        height: '60px',
-        background: 'linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))',
-        borderRadius: '50%',
-        filter: 'blur(1px)',
-        animation: 'float3 10s ease-in-out infinite',
-        boxShadow: '0 0 30px rgba(255,255,255,0.15)'
-      }} />
-      
-      {/* 添加CSS动画 */}
+
       <style>
         {`
-          @keyframes sparkle {
+          @keyframes float {
             0% { transform: translateY(0px); }
-            100% { transform: translateY(-100px); }
-          }
-          @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-          @keyframes float1 {
-            0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
-            25% { transform: translateY(-30px) translateX(10px) scale(1.1); }
-            50% { transform: translateY(-20px) translateX(-5px) scale(0.9); }
-            75% { transform: translateY(-40px) translateX(15px) scale(1.05); }
-          }
-          @keyframes float2 {
-            0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
-            33% { transform: translateY(-25px) translateX(-10px) scale(1.2); }
-            66% { transform: translateY(-15px) translateX(8px) scale(0.8); }
-          }
-          @keyframes float3 {
-            0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
-            50% { transform: translateY(-35px) translateX(12px) scale(1.3); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
           }
         `}
       </style>
       <Card
         style={{
           width: '100%',
-          maxWidth: 420,
-          background: 'rgba(255, 255, 255, 0.15)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: `
-            0 8px 32px rgba(0, 0, 0, 0.1),
-            0 0 0 1px rgba(255, 255, 255, 0.05),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1)
-          `,
-          borderRadius: '24px',
-          position: 'relative',
-          zIndex: 1,
-          overflow: 'hidden'
+          maxWidth: 400,
+          background: '#fff',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+          border: 'none',
+          zIndex: 1
         }}
+        bodyStyle={{ padding: '40px 32px' }}
       >
-        {/* 卡片内部光效 */}
         <div style={{
-          position: 'absolute',
-          top: '-50%',
-          left: '-50%',
-          width: '200%',
-          height: '200%',
-          background: `
-            radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
-            radial-gradient(circle at 70% 70%, rgba(255,255,255,0.05) 0%, transparent 50%)
-          `,
-          animation: 'rotate 20s linear infinite reverse',
-          pointerEvents: 'none'
-        }} />
-        <div style={{ 
-          textAlign: 'center', 
-          marginBottom: '32px',
-          position: 'relative',
-          zIndex: 2
+          textAlign: 'center',
+          marginBottom: '32px'
         }}>
           <div style={{
-            display: 'inline-block',
-            padding: '20px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '64px',
+            height: '64px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05))',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-            marginBottom: '20px'
+            background: 'rgba(24,144,255,0.1)',
+            marginBottom: '16px',
+            color: '#1890ff'
           }}>
-            <LoginOutlined style={{ 
-              fontSize: '56px', 
-              background: 'linear-gradient(135deg, #667eea, #764ba2, #f093fb)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))'
-            }} />
+            <LoginOutlined style={{ fontSize: '32px' }} />
           </div>
-          <Title level={1} style={{ 
-            margin: 0, 
-            background: 'linear-gradient(135deg, #1a1a1a, #4a4a4a)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            fontSize: '32px',
-            fontWeight: '700',
-            letterSpacing: '1px',
-            textShadow: '0 2px 4px rgba(255, 255, 255, 0.3)'
+          <Title level={2} style={{
+            margin: '0 0 8px',
+            color: '#002766',
+            fontSize: '24px',
+            fontWeight: 600
           }}>
             智能组卷系统
           </Title>
-          <Text style={{ 
-            color: '#666',
-            fontSize: '16px',
-            fontWeight: '400',
-            textShadow: '0 1px 2px rgba(255, 255, 255, 0.5)',
-            marginTop: '8px',
-            display: 'block'
-          }}>
-            请登录您的账户
+          <Text type="secondary" style={{ fontSize: '14px' }}>
+            新一代在线考试与智能组卷平台
           </Text>
         </div>
 
@@ -240,90 +117,33 @@ const Login: React.FC = () => {
           onFinish={onFinish}
           autoComplete="off"
           size="large"
+          layout="vertical"
         >
           <Form.Item
             name="username"
             rules={[
-              { required: true, message: '请输入用户名!' },
-              { min: 3, message: '用户名至少3个字符!' }
+              { required: true, message: '请输入用户名' },
+              { min: 3, message: '用户名至少3个字符' }
             ]}
           >
             <Input
-              prefix={<UserOutlined style={{ 
-                color: '#667eea',
-                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
-              }} />}
+              prefix={<UserOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
               placeholder="用户名"
-              style={{ 
-                borderRadius: '16px',
-                background: 'rgba(255, 255, 255, 0.9)',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                backdropFilter: 'blur(10px)',
-                boxShadow: `
-                  0 4px 16px rgba(0, 0, 0, 0.1),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.2)
-                `,
-                height: '52px',
-                fontSize: '16px',
-                transition: 'all 0.3s ease'
-              }}
-              onFocus={(e) => {
-                e.target.style.border = '2px solid rgba(102, 126, 234, 0.5)';
-                e.target.style.boxShadow = `
-                  0 4px 20px rgba(102, 126, 234, 0.2),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.3)
-                `;
-              }}
-              onBlur={(e) => {
-                e.target.style.border = '2px solid rgba(255, 255, 255, 0.3)';
-                e.target.style.boxShadow = `
-                  0 4px 16px rgba(0, 0, 0, 0.1),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.2)
-                `;
-              }}
+              style={{ borderRadius: '4px' }}
             />
           </Form.Item>
 
           <Form.Item
             name="password"
             rules={[
-              { required: true, message: '请输入密码!' },
-              { min: 6, message: '密码至少6个字符!' }
+              { required: true, message: '请输入密码' },
+              { min: 6, message: '密码至少6个字符' }
             ]}
           >
             <Input.Password
-              prefix={<LockOutlined style={{ 
-                color: '#667eea',
-                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
-              }} />}
+              prefix={<LockOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
               placeholder="密码"
-              style={{ 
-                borderRadius: '16px',
-                background: 'rgba(255, 255, 255, 0.9)',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                backdropFilter: 'blur(10px)',
-                boxShadow: `
-                  0 4px 16px rgba(0, 0, 0, 0.1),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.2)
-                `,
-                height: '52px',
-                fontSize: '16px',
-                transition: 'all 0.3s ease'
-              }}
-              onFocus={(e) => {
-                e.target.style.border = '2px solid rgba(102, 126, 234, 0.5)';
-                e.target.style.boxShadow = `
-                  0 4px 20px rgba(102, 126, 234, 0.2),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.3)
-                `;
-              }}
-              onBlur={(e) => {
-                e.target.style.border = '2px solid rgba(255, 255, 255, 0.3)';
-                e.target.style.boxShadow = `
-                  0 4px 16px rgba(0, 0, 0, 0.1),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.2)
-                `;
-              }}
+              style={{ borderRadius: '4px' }}
             />
           </Form.Item>
 
@@ -331,120 +151,57 @@ const Login: React.FC = () => {
             <div style={{
               color: '#ff4d4f',
               textAlign: 'center',
-              marginBottom: '16px',
+              marginBottom: '24px',
               padding: '8px',
               background: '#fff2f0',
               border: '1px solid #ffccc7',
-              borderRadius: '6px'
+              borderRadius: '4px',
+              fontSize: '14px'
             }}>
               {error}
             </div>
           )}
 
-          <Form.Item>
+          <Form.Item style={{ marginBottom: '16px' }}>
             <Button
               type="primary"
               htmlType="submit"
               loading={loading}
               block
               style={{
-                height: '56px',
-                borderRadius: '16px',
-                fontSize: '18px',
-                fontWeight: '700',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-                border: 'none',
-                boxShadow: `
-                  0 8px 25px rgba(102, 126, 234, 0.4),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.2)
-                `,
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                e.currentTarget.style.boxShadow = `
-                  0 12px 35px rgba(102, 126, 234, 0.6),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.3)
-                `;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
-                e.currentTarget.style.boxShadow = `
-                  0 8px 25px rgba(102, 126, 234, 0.4),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.2)
-                `;
+                height: '40px',
+                borderRadius: '4px',
+                fontSize: '16px',
+                background: '#1890ff',
+                borderColor: '#1890ff',
+                fontWeight: 500
               }}
             >
-              {loading ? '登录中...' : '登录'}
+              登 录
             </Button>
           </Form.Item>
         </Form>
 
-        <Divider>
-          <Text type="secondary">还没有账户？</Text>
-        </Divider>
+        <Divider style={{ margin: '24px 0', fontSize: '12px', color: '#999' }}>还没有账号？</Divider>
 
-        <div style={{ textAlign: 'center', marginTop: '8px' }}>
+        <div style={{ textAlign: 'center' }}>
           <Link to="/register">
-            <Button 
-              type="link" 
-              size="large" 
-              style={{ 
-                padding: '8px 16px',
-                color: '#667eea',
-                fontWeight: '600',
-                fontSize: '16px',
-                textShadow: '0 1px 2px rgba(255, 255, 255, 0.8)',
-                borderRadius: '12px',
-                background: 'rgba(102, 126, 234, 0.1)',
-                border: '1px solid rgba(102, 126, 234, 0.2)',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(102, 126, 234, 0.2)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)';
-                e.currentTarget.style.transform = 'translateY(0px)';
-              }}
-            >
-              立即注册
+            <Button type="link" style={{ fontSize: '14px' }}>
+              立即注册新账号
             </Button>
           </Link>
         </div>
 
-        <div style={{ 
-          textAlign: 'center', 
-          marginTop: '20px',
-          padding: '12px 16px',
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          backdropFilter: 'blur(10px)',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+        <div style={{
+          marginTop: '32px',
+          padding: '12px',
+          background: '#f5f7fa',
+          borderRadius: '4px',
+          textAlign: 'center',
+          color: '#666',
+          fontSize: '12px'
         }}>
-          <Text style={{ 
-            fontSize: '13px',
-            color: '#555',
-            fontWeight: '500',
-            textShadow: '0 1px 2px rgba(255, 255, 255, 0.6)',
-            display: 'block'
-          }}>
-            💡 测试账户
-          </Text>
-          <Text style={{ 
-            fontSize: '14px',
-            color: '#333',
-            fontWeight: '600',
-            textShadow: '0 1px 2px rgba(255, 255, 255, 0.8)',
-            display: 'block',
-            marginTop: '4px'
-          }}>
-            admin / admin123
-          </Text>
+          💡 测试账号: <b>admin</b> / <b>admin123</b>
         </div>
       </Card>
     </div>

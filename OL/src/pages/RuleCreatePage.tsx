@@ -71,7 +71,7 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
   const [availableKnowledgePoints, setAvailableKnowledgePoints] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [activePanel, setActivePanel] = useState<string[]>(['basic', 'questions', 'knowledge']);
-  
+
   //  题目统计（用于限制题型数量）
   const [questionStatistics, setQuestionStatistics] = useState<Record<string, number>>({});
 
@@ -85,11 +85,11 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
   ];
 
   //  学科名-Id（从数据库加载）
-  const [subjectIds , setSubjectIds] = useState(Array<{key: string , value: string}>([]));
+  const [subjectIds, setSubjectIds] = useState<{ key: string; value: string }[]>([]);
 
   //  学科选项（从数据库加载）
-  const [subjectOptions, setSubjectOptions] = useState<Array<{value: string, label: string}>>([]);
-  
+  const [subjectOptions, setSubjectOptions] = useState<Array<{ value: string, label: string }>>([]);
+
   //  学科对应的知识点（从数据库加载）
   const [subjectKnowledgePoints, setSubjectKnowledgePoints] = useState<Record<string, string[]>>({});
 
@@ -110,16 +110,16 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
           duration: initialData.duration,
           difficulty: initialData.difficulty
         });
-        
+
         //  如果初始数据有学科，先加载该学科的知识点（编辑模式下不清空已有知识点）
         if (initialData.subject) {
           // 先加载学科知识点，然后再解析规则配置（确保subjectKnowledgePoints已加载）
           await updateAvailableKnowledgePoints(initialData.subject, false);
-          
+
           // 等待一下，确保subjectKnowledgePoints已更新
           await new Promise(resolve => setTimeout(resolve, 100));
         }
-        
+
         // 解析题型配置
         if (initialData.ruleConfig) {
           try {
@@ -132,19 +132,19 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
               }));
               setQuestionTypes(types);
             }
-            
+
             //  解析知识点配置（注意数据类型）
             if (config.knowledgePoints) {
-              const kps = Array.isArray(config.knowledgePoints) 
+              const kps = Array.isArray(config.knowledgePoints)
                 ? config.knowledgePoints.map((kp: any) => ({
-                    point: kp.point || kp.name || '',
-                    weight: (kp.weight || 0)
-                  }))
+                  point: kp.point || kp.name || '',
+                  weight: (kp.weight || 0)
+                }))
                 : Object.entries(config.knowledgePoints).map(([point, weight]) => ({
-                    point,
-                    weight: (weight as number) * 100
-                  }));
-              
+                  point,
+                  weight: (weight as number) * 100
+                }));
+
               //  过滤掉不属于当前学科的知识点
               const selectedSubject = initialData.subject;
               if (selectedSubject && subjectKnowledgePoints[selectedSubject]) {
@@ -156,7 +156,7 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
                   return isValid;
                 });
                 setKnowledgePoints(validKPs);
-                
+
                 if (validKPs.length < kps.length) {
                   message.warning(`已过滤掉${kps.length - validKPs.length}个不属于当前学科的知识点`);
                 }
@@ -170,9 +170,9 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
         }
       }
     };
-    
+
     loadEditData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, initialData, form]);
 
   const loadSubjects = async () => {
@@ -187,10 +187,10 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
         key: s.name,
         value: s.id
       }))
-      console.log("2222222222subject:" , subjectList)
+      console.log("2222222222subject:", subjectList)
       setSubjectIds(subjectIdList);
       setSubjectOptions(subjectList);
-      console.log("123subjectIds:",subjectIds)
+      console.log("123subjectIds:", subjectIds)
 
       // 加载每个学科的知识点
       for (const subject of subjects) {
@@ -232,13 +232,13 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
     if (!subjectKnowledgePoints[subject]) {
       await loadKnowledgePointsForSubject(subject);
     }
-    
+
     const points = subjectKnowledgePoints[subject] || [];
     setAvailableKnowledgePoints(points);
-    
+
     //  加载题目统计信息
     await loadQuestionStatistics(subject);
-    
+
     // 只有在非编辑模式下或明确指定时才清空当前知识点配置
     if (clearExisting && mode !== 'edit') {
       setKnowledgePoints([]);
@@ -250,16 +250,16 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
     try {
       let i = 0;
       for (; i < subjectIds.length; i++) {
-        if (subjectIds[i].key == subject){
+        if (subjectIds[i].key == subject) {
           break;
         }
 
       }
-      if (!subjectIds[i].value){
+      if (!subjectIds[i].value) {
         console.error(`找不到${subject}学科id`)
       }
-      const response = await questionApi.getQuestionStatistics(subjectIds[i].value);
-      console.log("res" , response.data.object)
+      const response = await questionApi.getQuestionStatistics(Number(subjectIds[i].value));
+      console.log("res", response.data.object)
       if (response.data.code === 200) {
         const stats = response.data.object.statistics || {};
         setQuestionStatistics(stats);
@@ -297,17 +297,17 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
       message.warning('请先选择学科，然后才能添加知识点');
       return;
     }
-    
+
     //  检查是否有可用知识点
     if (availableKnowledgePoints.length === 0) {
       message.warning('该学科暂无知识点，请先为该学科添加知识点');
       return;
     }
-    
+
     // 找到第一个未使用的知识点
     const usedPoints = knowledgePoints.map(kp => kp.point);
     const availablePoint = availableKnowledgePoints.find(kp => !usedPoints.includes(kp));
-    
+
     if (availablePoint) {
       setKnowledgePoints([...knowledgePoints, { point: availablePoint, weight: 0 }]);
     } else {
@@ -329,7 +329,7 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
         message.warning('请先选择学科');
         return;
       }
-      
+
       // 验证知识点是否属于当前学科
       const currentSubjectKPs = subjectKnowledgePoints[selectedSubject] || [];
       if (!currentSubjectKPs.includes(value)) {
@@ -337,7 +337,7 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
         return;
       }
     }
-    
+
     const updated = [...knowledgePoints];
     updated[index] = { ...updated[index], [field]: value };
     setKnowledgePoints(updated);
@@ -356,45 +356,45 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
   //  计算知识点权重总和（处理 NaN 和 undefined）
   const calculateWeightSum = () => {
     if (knowledgePoints.length === 0) return 0;
-    
+
     const sum = knowledgePoints.reduce((total, point) => {
       const weight = point.weight || 0;
       return total + (isNaN(weight) ? 0 : weight);
     }, 0);
-    
+
     return isNaN(sum) ? 0 : sum;
   };
 
   // 验证配置
   const validateConfiguration = () => {
     const errors: string[] = [];
-    
+
     if (questionTypes.length === 0) {
       errors.push('请至少配置一种题目类型');
     }
-    
+
     if (knowledgePoints.length === 0) {
       errors.push('请至少配置一个知识点');
     }
-    
+
     const weightSum = calculateWeightSum();
     if (Math.abs(weightSum - 100) > 0.01) {
       errors.push('知识点权重总和必须等于100%');
     }
-    
+
     // 检查是否有重复的题目类型
     const typeCounts = questionTypes.reduce((acc, type) => {
       acc[type.type] = (acc[type.type] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
+
     Object.entries(typeCounts).forEach(([type, count]) => {
       if (count > 1) {
         const typeLabel = questionTypeOptions.find(opt => opt.value === type)?.label;
         errors.push(`题目类型"${typeLabel}"重复配置`);
       }
     });
-    
+
     setValidationErrors(errors);
     return errors.length === 0;
   };
@@ -448,7 +448,7 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
       // 创建的规则都是用户自己的规则（isSystem=false）
       const isAdmin = user?.role === 'ADMIN';
       const apiEndpoint = isAdmin ? '/api/rules' : '/api/rules/user';
-      
+
       console.log('用户角色:', user?.role, 'API端点:', apiEndpoint);
       console.log('普通用户可以创建使用系统学科的规则，但规则属于用户自己');
 
@@ -478,7 +478,7 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
   };
 
   return (
-    <div style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
+    <div className="page-container">
       {/* 页面头部 */}
       <div style={{ marginBottom: '24px' }}>
         <Space>
@@ -525,17 +525,17 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
         }}
       >
         {/* 统计信息面板 */}
-        <Card 
+        <Card
           title={
             <Space>
               <CalculatorOutlined />
               配置统计
-              <Badge 
-                count={validationErrors.length} 
+              <Badge
+                count={validationErrors.length}
                 style={{ backgroundColor: validationErrors.length > 0 ? '#ff4d4f' : '#52c41a' }}
               />
             </Space>
-          } 
+          }
           style={{ marginBottom: '24px' }}
         >
           <Row gutter={24}>
@@ -573,12 +573,12 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
               />
             </Col>
           </Row>
-          
+
           {/* 权重进度条 */}
           <div style={{ marginTop: '16px' }}>
             <Text strong>知识点权重分布：</Text>
-            <Progress 
-              percent={calculateWeightSum()} 
+            <Progress
+              percent={calculateWeightSum()}
               status={Math.abs(calculateWeightSum() - 100) <= 0.01 ? 'success' : 'exception'}
               strokeColor={{
                 '0%': '#108ee9',
@@ -594,23 +594,23 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
         </Card>
 
         {/* 折叠面板 */}
-        <Collapse 
-          activeKey={activePanel} 
+        <Collapse
+          activeKey={activePanel}
           onChange={setActivePanel}
           style={{ marginBottom: '24px' }}
         >
           {/* 基本信息 */}
-          <Panel 
+          <Panel
             header={
               <Space>
                 <SettingOutlined />
                 基本信息
-                <Badge 
-                  count={form.getFieldsError().some(field => field.errors.length > 0) ? 1 : 0} 
+                <Badge
+                  count={form.getFieldsError().some(field => field.errors.length > 0) ? 1 : 0}
                   style={{ backgroundColor: '#ff4d4f' }}
                 />
               </Space>
-            } 
+            }
             key="basic"
           >
             <Row gutter={24}>
@@ -642,23 +642,23 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
                       label="学科"
                       rules={[{ required: true, message: '请选择学科' }]}
                     >
-                      <Select 
-                        placeholder="请选择学科" 
+                      <Select
+                        placeholder="请选择学科"
                         size="large"
                         onChange={async (value: string) => {
                           //  保存当前学科值
                           const currentSubject = form.getFieldValue('subject');
-                          
+
                           //  加载新学科的知识点
                           await updateAvailableKnowledgePoints(value);
-                          
+
                           //  检查已有知识点是否属于新学科，如果不属于则清空
                           if (knowledgePoints.length > 0) {
                             const newSubjectKPs = subjectKnowledgePoints[value] || [];
                             const invalidKPs = knowledgePoints.filter(
                               kp => !newSubjectKPs.includes(kp.point)
                             );
-                            
+
                             if (invalidKPs.length > 0) {
                               Modal.confirm({
                                 title: '切换学科提示',
@@ -740,14 +740,14 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
           </Panel>
 
           {/* 题目类型配置 */}
-          <Panel 
+          <Panel
             header={
               <Space>
                 <BookOutlined />
                 题目类型配置
                 <Badge count={questionTypes.length} style={{ backgroundColor: '#1890ff' }} />
               </Space>
-            } 
+            }
             key="questions"
           >
             <div style={{ marginBottom: '16px' }}>
@@ -756,11 +756,11 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
                 配置不同题型的数量和分值，系统将根据配置自动生成试卷
               </Text>
             </div>
-            
+
             {questionTypes.map((type, index) => (
-              <Card 
-                key={index} 
-                size="small" 
+              <Card
+                key={index}
+                size="small"
                 style={{ marginBottom: '12px', border: '1px solid #d9d9d9' }}
                 bodyStyle={{ padding: '12px' }}
               >
@@ -842,7 +842,7 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
                 </Row>
               </Card>
             ))}
-            
+
             <Button
               type="dashed"
               icon={<PlusOutlined />}
@@ -855,7 +855,7 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
           </Panel>
 
           {/* 知识点配置 */}
-          <Panel 
+          <Panel
             header={
               <Space>
                 <BookOutlined />
@@ -865,7 +865,7 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
                   <Tag color="success">权重已平衡</Tag>
                 )}
               </Space>
-            } 
+            }
             key="knowledge"
           >
             <div style={{ marginBottom: '16px' }}>
@@ -888,11 +888,11 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
                 style={{ marginBottom: '12px' }}
               />
             </div>
-            
+
             {knowledgePoints.map((point, index) => (
-              <Card 
-                key={index} 
-                size="small" 
+              <Card
+                key={index}
+                size="small"
                 style={{ marginBottom: '12px', border: '1px solid #d9d9d9' }}
                 bodyStyle={{ padding: '12px' }}
               >
@@ -910,8 +910,8 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
                         (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                       }
                       notFoundContent={
-                        availableKnowledgePoints.length === 0 
-                          ? '请先选择学科，然后等待知识点加载' 
+                        availableKnowledgePoints.length === 0
+                          ? '请先选择学科，然后等待知识点加载'
                           : '暂无可用知识点'
                       }
                       options={availableKnowledgePoints
@@ -953,18 +953,18 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
                 </Row>
               </Card>
             ))}
-            
+
             <Button
               type="dashed"
               icon={<PlusOutlined />}
               onClick={addKnowledgePoint}
               style={{ width: '100%', height: '48px' }}
               size="large"
-              disabled={availableKnowledgePoints.length === 0 || 
-                       knowledgePoints.length >= availableKnowledgePoints.length}
+              disabled={availableKnowledgePoints.length === 0 ||
+                knowledgePoints.length >= availableKnowledgePoints.length}
             >
-              {availableKnowledgePoints.length === 0 
-                ? '请先选择学科' 
+              {availableKnowledgePoints.length === 0
+                ? '请先选择学科'
                 : knowledgePoints.length >= availableKnowledgePoints.length
                   ? '所有知识点已添加'
                   : '添加知识点'
@@ -986,21 +986,21 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
                   loading={loading}
                   size="large"
                   disabled={validationErrors.length > 0}
-                  style={{ 
-                    height: '48px', 
-                    paddingLeft: '32px', 
+                  style={{
+                    height: '48px',
+                    paddingLeft: '32px',
                     paddingRight: '32px',
                     fontSize: '16px'
                   }}
                 >
                   {mode === 'edit' ? '保存修改' : '创建规则'}
                 </Button>
-                <Button 
+                <Button
                   onClick={() => navigate('/rules')}
                   size="large"
-                  style={{ 
-                    height: '48px', 
-                    paddingLeft: '32px', 
+                  style={{
+                    height: '48px',
+                    paddingLeft: '32px',
                     paddingRight: '32px',
                     fontSize: '16px'
                   }}
@@ -1010,7 +1010,7 @@ const RuleCreatePage: React.FC<RuleCreatePageProps> = ({ mode = 'create', initia
               </Space>
             </Col>
           </Row>
-          
+
           {validationErrors.length > 0 && (
             <div style={{ textAlign: 'center', marginTop: '16px' }}>
               <Text type="danger">

@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Table, 
-  Button, 
-  Space, 
-  message, 
-  Modal, 
-  Form, 
-  Input, 
+import {
+  Table,
+  Button,
+  Space,
+  message,
+  Modal,
+  Form,
+  Input,
   InputNumber,
   Card,
   Tag,
   Popconfirm,
-  Typography
+  Typography,
+  Select
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { examPaperService, ExamPaper } from '../services/examPaperService';
+import { subjectService } from '../services/subjectService';
 import { useNavigate } from 'react-router-dom';
 import SearchFilter, { SearchFilterConfig, SearchFilterValue } from '../components/SearchFilter';
 
@@ -32,6 +34,7 @@ const MyPaperManagement: React.FC = () => {
   const [searchFilterValue, setSearchFilterValue] = useState<SearchFilterValue>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [subjectOptions, setSubjectOptions] = useState<Array<{ label: string; value: string }>>([]);
 
   // 搜索筛选配置
   const searchFilterConfig: SearchFilterConfig = {
@@ -145,8 +148,19 @@ const MyPaperManagement: React.FC = () => {
     setFilteredPapers(papers);
   };
 
+  // 获取学科列表
+  const fetchSubjects = async () => {
+    try {
+      const subjects = await subjectService.getSubjects();
+      setSubjectOptions(subjects);
+    } catch (error) {
+      console.error('获取学科列表失败:', error);
+    }
+  };
+
   useEffect(() => {
     fetchPapers();
+    fetchSubjects();
   }, []);
 
   // 处理创建/编辑试卷
@@ -158,7 +172,11 @@ const MyPaperManagement: React.FC = () => {
         message.success('试卷更新成功');
       } else {
         // 创建个人试卷
-        await examPaperService.createMyPaper(values);
+        await examPaperService.createMyPaper({
+          ...values,
+          type: 'MANUAL',
+          generationType: 'MANUAL'
+        });
         message.success('个人试卷创建成功');
       }
       setModalVisible(false);
@@ -408,10 +426,18 @@ const MyPaperManagement: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            name="subject"
+            name="subjectId"
             label="学科"
+            rules={[{ required: true, message: '请选择学科' }]}
           >
-            <Input placeholder="请输入学科" />
+            <Select
+              placeholder="请选择学科"
+              options={subjectOptions}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>

@@ -19,21 +19,21 @@ public class SimpleInterceptorConfig implements WebMvcConfigurer {
     @Autowired
     private SimplePermissionInterceptor simplePermissionInterceptor;
 
-
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(simplePermissionInterceptor)
                 .addPathPatterns("/**") // 拦截所有请求
                 .excludePathPatterns(
-                        "/user/login",           // 登录接口
-                        "/user/create",          // 注册接口
-                        "/user/validate-token",  // token验证接口
-                        "/api/test/**",          // 测试API接口
-                        "/swagger-ui/**",        // Swagger UI
-                        "/v3/api-docs/**",       // OpenAPI文档
+                        "/api/user/login", // 登录接口
+                        "/api/user/create", // 注册接口
+                        "/api/user/validate-token", // token验证接口
+                        "/api/upload/**", // 文件上传接口
+                        "/api/test/**", // 测试API接口
+                        "/swagger-ui/**", // Swagger UI
+                        "/v3/api-docs/**", // OpenAPI文档
                         "/swagger-resources/**", // Swagger资源
-                        "/webjars/**",           // 静态资源
-                        "/error"                 // 错误页面
+                        "/webjars/**", // 静态资源
+                        "/error" // 错误页面
 
                 );
     }

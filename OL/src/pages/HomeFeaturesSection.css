@@ -1,0 +1,34 @@
+/* HomeFeaturesSection.css */
+
+.home-features-section {
+    padding-bottom: 60px;
+}
+
+.home-features-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.feature-title {
+    margin-bottom: 16px !important;
+}
+
+.feature-desc {
+    padding: 0 12px;
+}
+
+/* Feature specific styles */
+.feature-icon-import {
+    background: #e6fffb;
+    color: #13c2c2;
+}
+
+.feature-icon-ai {
+    background: #f9f0ff;
+    color: #722ed1;
+}
+
+.feature-icon-rule {
+    background: #fff0f6;
+    color: #eb2f96;
+}

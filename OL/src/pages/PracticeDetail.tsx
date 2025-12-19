@@ -30,6 +30,7 @@ import {
   BulbOutlined
 } from '@ant-design/icons';
 import { practiceRecordService, PracticeRecord } from '../services/practiceRecordService';
+import SubjectiveQuestionDisplay from '../components/SubjectiveQuestionDisplay';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -44,7 +45,17 @@ interface QuestionDetail {
   isCorrect: boolean;
   score: number;
   explanation?: string;
+  // 新增字段用于相似度评分和AI评分
+  answerId?: number;
+  similarityScore?: number;
+  finalScore?: number;
+  scoreType?: string;
+  aiScore?: number;
+  aiFeedback?: string;
+  aiSuggestions?: string;
+  maxScore?: number;
 }
+
 
 const PracticeDetail: React.FC = () => {
   const { recordId } = useParams<{ recordId: string }>();
@@ -159,6 +170,9 @@ const PracticeDetail: React.FC = () => {
               }
             }
 
+            // 从答题记录中获取信息
+            const answerRecord = answerRecords.find(ar => ar.questionId.toString() === questionId);
+
             questionDetails.push({
               id: question.questionId || question.id,
               question: question.title,
@@ -167,8 +181,17 @@ const PracticeDetail: React.FC = () => {
               correctAnswer: question.correctAnswer,
               userAnswer: userAnswer,
               isCorrect: isCorrect,
-              score: isCorrect ? (question.score || 5) : 0,
-              explanation: question.explanation || '暂无解析'
+              score: answerRecord?.finalScore ?? (isCorrect ? (question.score || 5) : 0),
+              explanation: question.explanation || '暂无解析',
+              // 添加相似度评分相关字段
+              answerId: answerRecord?.id,
+              similarityScore: answerRecord?.similarityScore,
+              finalScore: answerRecord?.finalScore,
+              scoreType: answerRecord?.scoreType,
+              aiScore: answerRecord?.aiScore,
+              aiFeedback: answerRecord?.aiFeedback,
+              aiSuggestions: answerRecord?.aiSuggestions,
+              maxScore: question.score || 5
             });
           });
 
@@ -224,7 +247,8 @@ const PracticeDetail: React.FC = () => {
                 userAnswer: userAnswer || '未作答',
                 isCorrect: isCorrect || false,
                 score: isCorrect ? (question.score || 5) : 0,
-                explanation: question.explanation || '暂无解析'
+                explanation: question.explanation || '暂无解析',
+                maxScore: question.score || 5
               });
             });
 
@@ -246,7 +270,7 @@ const PracticeDetail: React.FC = () => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
       return `${hours}小时${minutes}分钟${secs}秒`;
     } else if (minutes > 0) {
@@ -259,7 +283,7 @@ const PracticeDetail: React.FC = () => {
   // 解析正确答案格式（支持JSON数组字符串、逗号分隔字符串、选项文本字符串）
   const parseCorrectAnswer = (correctAnswer: string): string[] => {
     if (!correctAnswer) return [];
-    
+
     // 尝试解析JSON数组格式（如 "[\"A\", \"B\", \"C\", \"D\"]"）
     try {
       const parsed = JSON.parse(correctAnswer);
@@ -269,12 +293,12 @@ const PracticeDetail: React.FC = () => {
     } catch (e) {
       // 不是JSON格式，继续处理
     }
-    
+
     // 尝试逗号分隔格式（如 "A,B,C,D" 或 "原子性,一致性,隔离性,持久性"）
     if (correctAnswer.includes(',')) {
       return correctAnswer.split(',').map((a: string) => a.trim());
     }
-    
+
     // 单个答案
     return [correctAnswer.trim()];
   };
@@ -282,8 +306,8 @@ const PracticeDetail: React.FC = () => {
   // 检查答案是否正确
   const checkAnswer = (question: any, userAnswer: any): boolean => {
     if (!userAnswer || !question.correctAnswer) return false;
-    
-    
+
+
     switch (question.type) {
       case 'SINGLE_CHOICE':
         // 单选题：需要处理选项字母和选项文本两种格式
@@ -292,7 +316,7 @@ const PracticeDetail: React.FC = () => {
           const optionIndex = question.options.findIndex((option: string) => option === userAnswer);
           if (optionIndex !== -1) {
             const optionLetter = String.fromCharCode(65 + optionIndex); // A, B, C, D
-            
+
             // 检查正确答案是选项字母还是选项文本
             if (question.correctAnswer.length === 1 && /[A-D]/.test(question.correctAnswer)) {
               // 正确答案是选项字母
@@ -302,7 +326,7 @@ const PracticeDetail: React.FC = () => {
               return userAnswer === question.correctAnswer;
             }
           }
-          
+
           // 如果用户答案是选项字母，检查正确答案
           if (typeof userAnswer === 'string' && userAnswer.length === 1 && /[A-D]/.test(userAnswer)) {
             if (question.correctAnswer.length === 1 && /[A-D]/.test(question.correctAnswer)) {
@@ -315,34 +339,34 @@ const PracticeDetail: React.FC = () => {
               return correctOptionText === question.correctAnswer;
             }
           }
-          
+
           // 如果用户答案是选项文本，但正确答案也是选项文本，直接比较
           if (typeof userAnswer === 'string' && question.options.includes(userAnswer)) {
             return userAnswer === question.correctAnswer;
           }
         }
-        
+
         // 直接比较（处理各种格式）
         const userAnswerStr = String(userAnswer).trim();
         const correctAnswerStr = String(question.correctAnswer).trim();
-        
+
         // 如果完全匹配，返回true
         if (userAnswerStr === correctAnswerStr) {
           return true;
         }
-        
+
         // 如果用户答案是选项文本，检查是否与正确答案匹配
         if (Array.isArray(question.options) && question.options.includes(userAnswerStr)) {
           return userAnswerStr === correctAnswerStr;
         }
-        
+
         return false;
-        
+
       case 'TRUE_FALSE':
         // 判断题：处理不同的文本格式
         const userAnswerStrTF = String(userAnswer).toLowerCase();
         const correctAnswerStrTF = String(question.correctAnswer).toLowerCase();
-        
+
         // 处理中文和英文的对应关系
         if (userAnswerStrTF === '正确' || userAnswerStrTF === 'true') {
           return correctAnswerStrTF === 'true' || correctAnswerStrTF === '正确';
@@ -350,17 +374,17 @@ const PracticeDetail: React.FC = () => {
           return correctAnswerStrTF === 'false' || correctAnswerStrTF === '错误';
         }
         return userAnswerStrTF === correctAnswerStrTF;
-        
+
       case 'MULTIPLE_CHOICE':
         // 多选题：用户选择的是选项文本数组
         if (Array.isArray(userAnswer) && Array.isArray(question.options)) {
           const userAnswers = userAnswer.map(a => String(a).trim()).sort();
           const correctAnswersParsed = parseCorrectAnswer(question.correctAnswer);
           const correctAnswers = correctAnswersParsed.map((a: string) => a.trim()).sort();
-          
+
           // 判断正确答案格式：如果都是单个字母（A-D），则可能是字母格式
           const isLetterFormat = correctAnswers.every((ca: string) => /^[A-D]$/i.test(ca.trim()));
-          
+
           if (isLetterFormat) {
             // 正确答案是字母格式（如"A,B,C,D"或["A","B","C","D"]），需要将用户答案转换为字母
             const userOptionLetters = userAnswer
@@ -370,20 +394,20 @@ const PracticeDetail: React.FC = () => {
               })
               .filter(letter => letter !== null)
               .sort();
-            
+
             return JSON.stringify(userOptionLetters) === JSON.stringify(correctAnswers);
           } else {
             // 正确答案是文本格式（如"原子性,一致性,隔离性,持久性"），直接比较文本
             return JSON.stringify(userAnswers) === JSON.stringify(correctAnswers);
           }
         }
-        
+
         // 如果不是数组，按原来的逻辑处理
         const userAnswersStr = String(userAnswer).split(',').map((a: string) => a.trim()).sort();
         const correctAnswersParsedStr = parseCorrectAnswer(question.correctAnswer);
         const correctAnswersStr = correctAnswersParsedStr.map((a: string) => a.trim()).sort();
         return JSON.stringify(userAnswersStr) === JSON.stringify(correctAnswersStr);
-        
+
       case 'FILL_BLANK':
         const normFB = (v: string) => v.trim().toLowerCase().replace(/\s+/g, ' ');
         const splitTokensFB = (v: string): string[] => v
@@ -401,7 +425,7 @@ const PracticeDetail: React.FC = () => {
         const setCorrFB = new Set(corrFB);
         for (const u of uaFB) { if (!setCorrFB.has(u)) return false; }
         return true;
-        
+
       default:
         return false;
     }
@@ -435,7 +459,7 @@ const PracticeDetail: React.FC = () => {
 
   const renderQuestionAnswer = (question: QuestionDetail) => {
     const { type, options, correctAnswer, userAnswer, isCorrect } = question;
-    
+
     // 调试信息
     console.log('渲染题目答案:', {
       type,
@@ -454,19 +478,19 @@ const PracticeDetail: React.FC = () => {
           const correctIndex = correctAnswer.charCodeAt(0) - 65;
           actualCorrectAnswer = options && options[correctIndex] ? options[correctIndex] : correctAnswer;
         }
-        
+
         return (
           <Radio.Group value={userAnswer} disabled>
             {options?.map((option: string, index: number) => {
               const isCorrectOption = option === actualCorrectAnswer;
               const isUserSelected = option === userAnswer;
               const isWrongSelection = isUserSelected && !isCorrect;
-              
+
               return (
                 <Radio key={index} value={option} style={{ display: 'block', marginBottom: 8 }}>
-                  <span style={{ 
-                    color: isCorrectOption ? '#52c41a' : 
-                           isWrongSelection ? '#ff4d4f' : '#000'
+                  <span style={{
+                    color: isCorrectOption ? '#52c41a' :
+                      isWrongSelection ? '#ff4d4f' : '#000'
                   }}>
                     {option}
                     {isCorrectOption && <CheckCircleOutlined style={{ marginLeft: 8, color: '#52c41a' }} />}
@@ -482,7 +506,7 @@ const PracticeDetail: React.FC = () => {
         // 解析正确答案格式（支持JSON数组字符串、逗号分隔字符串、选项文本字符串）
         const parseCorrectAnswerForDisplay = (correctAnswer: string): string[] => {
           if (!correctAnswer) return [];
-          
+
           // 尝试解析JSON数组格式（如 "[\"A\", \"B\", \"C\", \"D\"]"）
           try {
             const parsed = JSON.parse(correctAnswer);
@@ -492,20 +516,20 @@ const PracticeDetail: React.FC = () => {
           } catch (e) {
             // 不是JSON格式，继续处理
           }
-          
+
           // 尝试逗号分隔格式（如 "A,B,C,D" 或 "原子性,一致性,隔离性,持久性"）
           if (correctAnswer.includes(',')) {
             return correctAnswer.split(',').map((a: string) => a.trim());
           }
-          
+
           // 单个答案
           return [correctAnswer.trim()];
         };
-        
+
         // 处理正确答案：支持多种格式
         const correctAnswersParsed = parseCorrectAnswerForDisplay(correctAnswer);
         let correctAnswers: string[] = [];
-        
+
         // 将正确答案转换为选项文本
         correctAnswersParsed.forEach(ca => {
           const caTrimmed = ca.trim();
@@ -520,7 +544,7 @@ const PracticeDetail: React.FC = () => {
             correctAnswers.push(caTrimmed);
           }
         });
-        
+
         // 处理用户答案：可能是数组或字符串
         let userAnswers: string[] = [];
         if (Array.isArray(userAnswer)) {
@@ -543,7 +567,7 @@ const PracticeDetail: React.FC = () => {
             }
           }
         }
-        
+
         return (
           <Checkbox.Group value={userAnswers} disabled>
             <Space direction="vertical" style={{ width: '100%' }}>
@@ -554,12 +578,12 @@ const PracticeDetail: React.FC = () => {
                 const isUserSelected = userAnswers.includes(option);
                 // 检查是否为错误选择（用户选择了但这不是正确答案）
                 const isWrongSelection = isUserSelected && !isCorrectOption;
-                
+
                 return (
-                  <Checkbox 
-                    key={index} 
+                  <Checkbox
+                    key={index}
                     value={option}
-                    style={{ 
+                    style={{
                       display: 'flex',
                       alignItems: 'flex-start',
                       marginBottom: 8,
@@ -567,9 +591,9 @@ const PracticeDetail: React.FC = () => {
                       lineHeight: '22px'
                     }}
                   >
-                    <span style={{ 
-                      color: isCorrectOption ? '#52c41a' : 
-                             isWrongSelection ? '#ff4d4f' : '#000',
+                    <span style={{
+                      color: isCorrectOption ? '#52c41a' :
+                        isWrongSelection ? '#ff4d4f' : '#000',
                       flex: 1
                     }}>
                       {option}
@@ -591,7 +615,7 @@ const PracticeDetail: React.FC = () => {
       case 'TRUE_FALSE':
         // 判断题没有预定义选项，需要创建"正确"和"错误"选项
         const trueFalseOptions = ['正确', '错误'];
-        
+
         // 将正确答案标准化为中文
         const normalizeCorrectAnswer = (answer: string): string => {
           const answerLower = String(answer).toLowerCase().trim();
@@ -602,7 +626,7 @@ const PracticeDetail: React.FC = () => {
           }
           return String(answer);
         };
-        
+
         // 将用户答案标准化为中文
         const normalizeUserAnswer = (answer: any): string => {
           if (!answer || answer === '未作答') return '未作答';
@@ -614,22 +638,22 @@ const PracticeDetail: React.FC = () => {
           }
           return String(answer);
         };
-        
+
         const normalizedCorrectAnswer = normalizeCorrectAnswer(correctAnswer);
         const normalizedUserAnswer = normalizeUserAnswer(userAnswer);
-        
+
         return (
           <Radio.Group value={normalizedUserAnswer} disabled>
             {trueFalseOptions.map((option, index) => {
               const isCorrectOption = option === normalizedCorrectAnswer;
               const isUserSelected = option === normalizedUserAnswer;
               const isWrongSelection = isUserSelected && !isCorrect;
-              
+
               return (
                 <Radio key={index} value={option} style={{ display: 'block', marginBottom: 8 }}>
-                  <span style={{ 
-                    color: isCorrectOption ? '#52c41a' : 
-                           isWrongSelection ? '#ff4d4f' : '#000'
+                  <span style={{
+                    color: isCorrectOption ? '#52c41a' :
+                      isWrongSelection ? '#ff4d4f' : '#000'
                   }}>
                     {option}
                     {isCorrectOption && <CheckCircleOutlined style={{ marginLeft: 8, color: '#52c41a' }} />}
@@ -642,12 +666,31 @@ const PracticeDetail: React.FC = () => {
         );
 
       case 'FILL_BLANK':
+        // 使用SubjectiveQuestionDisplay组件显示主观题
+        if (question.answerId) {
+          return (
+            <SubjectiveQuestionDisplay
+              answerId={question.answerId}
+              questionType={type}
+              userAnswer={userAnswer}
+              correctAnswer={correctAnswer}
+              similarityScore={question.similarityScore}
+              finalScore={question.finalScore}
+              scoreType={question.scoreType}
+              aiScore={question.aiScore}
+              aiFeedback={question.aiFeedback}
+              aiSuggestions={question.aiSuggestions}
+              maxScore={question.maxScore || 5}
+              onScoreUpdate={() => loadRecordDetail()}
+            />
+          );
+        }
         return (
           <div>
             <TextArea
               value={userAnswer}
               disabled
-              style={{ 
+              style={{
                 backgroundColor: isCorrect ? '#f6ffed' : '#fff2f0',
                 borderColor: isCorrect ? '#b7eb8f' : '#ffccc7'
               }}
@@ -659,13 +702,32 @@ const PracticeDetail: React.FC = () => {
         );
 
       case 'SHORT_ANSWER':
+        // 使用SubjectiveQuestionDisplay组件显示主观题
+        if (question.answerId) {
+          return (
+            <SubjectiveQuestionDisplay
+              answerId={question.answerId}
+              questionType={type}
+              userAnswer={userAnswer}
+              correctAnswer={correctAnswer}
+              similarityScore={question.similarityScore}
+              finalScore={question.finalScore}
+              scoreType={question.scoreType}
+              aiScore={question.aiScore}
+              aiFeedback={question.aiFeedback}
+              aiSuggestions={question.aiSuggestions}
+              maxScore={question.maxScore || 5}
+              onScoreUpdate={() => loadRecordDetail()}
+            />
+          );
+        }
         return (
           <div>
             {/* 用户答案区域 */}
             <div style={{ marginBottom: 12 }}>
-              <div style={{ 
-                marginBottom: 8, 
-                fontSize: '14px', 
+              <div style={{
+                marginBottom: 8,
+                fontSize: '14px',
                 fontWeight: 'bold',
                 color: '#595959'
               }}>
@@ -679,7 +741,7 @@ const PracticeDetail: React.FC = () => {
                 minHeight: '100px',
                 position: 'relative'
               }}>
-                <Text style={{ 
+                <Text style={{
                   fontSize: '15px',
                   lineHeight: '1.8',
                   whiteSpace: 'pre-wrap',
@@ -689,30 +751,30 @@ const PracticeDetail: React.FC = () => {
                   {userAnswer || '未作答'}
                 </Text>
                 {isCorrect && (
-                  <CheckCircleOutlined 
-                    style={{ 
+                  <CheckCircleOutlined
+                    style={{
                       position: 'absolute',
                       top: '12px',
                       right: '12px',
                       fontSize: '20px',
                       color: '#52c41a'
-                    }} 
+                    }}
                   />
                 )}
                 {!isCorrect && userAnswer && (
-                  <CloseCircleOutlined 
-                    style={{ 
+                  <CloseCircleOutlined
+                    style={{
                       position: 'absolute',
                       top: '12px',
                       right: '12px',
                       fontSize: '20px',
                       color: '#ff4d4f'
-                    }} 
+                    }}
                   />
                 )}
               </div>
             </div>
-            
+
             {/* 参考答案区域 */}
             <div style={{
               backgroundColor: '#e6f7ff',
@@ -721,9 +783,9 @@ const PracticeDetail: React.FC = () => {
               padding: '16px',
               minHeight: '100px'
             }}>
-              <div style={{ 
-                marginBottom: 8, 
-                fontSize: '14px', 
+              <div style={{
+                marginBottom: 8,
+                fontSize: '14px',
                 fontWeight: 'bold',
                 color: '#1890ff',
                 display: 'flex',
@@ -733,7 +795,7 @@ const PracticeDetail: React.FC = () => {
                 <BookOutlined style={{ fontSize: '16px' }} />
                 参考答案：
               </div>
-              <Text style={{ 
+              <Text style={{
                 fontSize: '15px',
                 lineHeight: '1.8',
                 whiteSpace: 'pre-wrap',
@@ -765,7 +827,7 @@ const PracticeDetail: React.FC = () => {
   return (
     <div style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
       {/* 面包屑导航 */}
-      <Breadcrumb 
+      <Breadcrumb
         style={{ marginBottom: '16px' }}
         items={[
           {
@@ -906,35 +968,35 @@ const PracticeDetail: React.FC = () => {
             <Paragraph style={{ fontSize: '16px', marginBottom: 16 }}>
               {question.question}
             </Paragraph>
-            
+
             <div style={{ marginBottom: 16 }}>
               {renderQuestionAnswer(question)}
             </div>
 
             {showExplanation && question.explanation && (
-              <div style={{ 
-                backgroundColor: '#fff7e6', 
+              <div style={{
+                backgroundColor: '#fff7e6',
                 border: '2px solid #ffd591',
                 borderRadius: '8px',
                 padding: '16px',
                 marginTop: '16px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
               }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
                   marginBottom: '12px',
                   gap: '8px'
                 }}>
                   <BulbOutlined style={{ fontSize: '18px', color: '#fa8c16' }} />
-                  <Text strong style={{ 
-                    color: '#fa8c16', 
+                  <Text strong style={{
+                    color: '#fa8c16',
                     fontSize: '16px'
                   }}>
                     题目解析
                   </Text>
                 </div>
-                <div style={{ 
+                <div style={{
                   fontSize: '15px',
                   lineHeight: '1.8',
                   color: '#595959',

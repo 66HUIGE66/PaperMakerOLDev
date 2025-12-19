@@ -1,0 +1,304 @@
+/* PracticeRecordsPage.css */
+
+.practice-records-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 24px;
+}
+
+/* 顶部统计 Hero 区域 */
+.records-hero {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    display: flex;
+    flex-direction: column;
+}
+
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-title .anticon {
+    color: #1890ff;
+    font-size: 28px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #f0f0f0;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.stat-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #8c8c8c;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #262626;
+    line-height: 1.2;
+}
+
+/* 颜色变体 */
+.stat-card.blue .stat-icon-wrapper {
+    background: #e6f7ff;
+    color: #1890ff;
+}
+
+.stat-card.green .stat-icon-wrapper {
+    background: #f6ffed;
+    color: #52c41a;
+}
+
+.stat-card.orange .stat-icon-wrapper {
+    background: #fff7e6;
+    color: #fa8c16;
+}
+
+.stat-card.purple .stat-icon-wrapper {
+    background: #f9f0ff;
+    color: #722ed1;
+}
+
+/* 筛选区域 */
+.filter-bar {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+/* 记录列表 */
+.record-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.record-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+    border: 1px solid #f0f0f0;
+}
+
+.record-card:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+    transform: translateX(4px);
+}
+
+.record-info-main {
+    flex: 2;
+    min-width: 0;
+    /* 防止文本溢出 */
+    padding-right: 24px;
+}
+
+.record-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f1f1f;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.record-meta {
+    display: flex;
+    gap: 16px;
+    color: #8c8c8c;
+    font-size: 13px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.record-stats {
+    flex: 1.5;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 24px;
+    border-left: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+}
+
+.mini-stat {
+    text-align: center;
+}
+
+.mini-stat-label {
+    font-size: 12px;
+    color: #8c8c8c;
+    margin-bottom: 2px;
+}
+
+.mini-stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #262626;
+}
+
+.mini-stat-value.score {
+    color: #1890ff;
+}
+
+.mini-stat-value.accuracy {
+    color: #52c41a;
+}
+
+.record-actions {
+    flex: 0 0 160px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-left: 24px;
+}
+
+/* 状态标签自定义 */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge.completed {
+    background: #f6ffed;
+    color: #52c41a;
+    border: 1px solid #b7eb8f;
+}
+
+.status-badge.progress {
+    background: #e6f7ff;
+    color: #1890ff;
+    border: 1px solid #91d5ff;
+}
+
+.status-badge.timeout {
+    background: #fff1f0;
+    color: #f5222d;
+    border: 1px solid #ffa39e;
+}
+
+/* 响应式适配 */
+@media (max-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .record-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .record-stats {
+        width: 100%;
+        border: none;
+        border-top: 1px solid #f0f0f0;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 12px 0;
+        justify-content: space-between;
+    }
+
+    .record-actions {
+        width: 100%;
+        padding-left: 0;
+        justify-content: flex-end;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

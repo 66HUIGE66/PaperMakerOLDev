@@ -1,0 +1,100 @@
+/* MyPlansPage.css */
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Card Hover Effects */
+.plan-card {
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    /* shadow-xl equivalent */
+    border-color: #d6e4ff;
+    /* indigo-100 equivalent */
+}
+
+/* Custom Gradients and Colors */
+.bg-gradient-indigo {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+}
+
+.bg-gradient-orange {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.bg-gradient-purple {
+    background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+}
+
+.text-indigo-600 {
+    color: #4f46e5;
+}
+
+.bg-indigo-50 {
+    background-color: #eef2ff;
+}
+
+.bg-indigo-100 {
+    background-color: #e0e7ff;
+}
+
+.border-indigo-100 {
+    border-color: #e0e7ff;
+}
+
+/* Timeline Customization */
+.timeline-item-active .ant-timeline-item-head {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
+}
+
+.timeline-card {
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s;
+}
+
+.timeline-card:hover {
+    border-color: #d6e4ff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Detail Page Header */
+.detail-header-bg {
+    background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+    /* indigo-900 */
+    position: relative;
+    overflow: hidden;
+    color: white;
+}
+
+.glass-tag {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e0e7ff;
+}
+
+/* Progress Circle Animation */
+.progress-ring__circle {
+    transition: stroke-dashoffset 0.35s;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}

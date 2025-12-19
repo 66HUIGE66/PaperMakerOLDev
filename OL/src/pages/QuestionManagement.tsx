@@ -55,7 +55,7 @@ const QuestionManagement: React.FC = () => {
   const [filterSubject, setFilterSubject] = useState<string>('all');
   const [filterKnowledgePoint, setFilterKnowledgePoint] = useState<string>('all');
   const [availableKnowledgePoints, setAvailableKnowledgePoints] = useState<KnowledgePoint[]>([]);
-  const [availableSubjects, setAvailableSubjects] = useState<{label: string, value: string}[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<{ label: string, value: string }[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [importModalVisible, setImportModalVisible] = useState(false);
@@ -69,7 +69,7 @@ const QuestionManagement: React.FC = () => {
     acc[type] = questions.filter((q: Question) => q.type === type).length;
     return acc;
   }, {} as Record<QuestionType, number>);
-  
+
   const difficultyStats = Object.values(DifficultyLevel).reduce((acc, level) => {
     acc[level as DifficultyLevel] = questions.filter((q: Question) => q.difficulty === level).length;
     return acc;
@@ -121,14 +121,14 @@ const QuestionManagement: React.FC = () => {
 
   // 过滤后的题目
   const filteredQuestions = questions.filter((question: Question) => {
-    const matchesSearch = !searchText || 
+    const matchesSearch = !searchText ||
       question.title.toLowerCase().includes(searchText.toLowerCase()) ||
       question.knowledgePoints.some((kp: string) => kp.toLowerCase().includes(searchText.toLowerCase())) ||
       question.tags.some((tag: string) => tag.toLowerCase().includes(searchText.toLowerCase()));
-    
+
     const matchesType = filterType === 'all' || question.type === filterType;
     const matchesDifficulty = filterDifficulty === 'all' || question.difficulty === filterDifficulty;
-    
+
     return matchesSearch && matchesType && matchesDifficulty;
   });
 
@@ -138,16 +138,50 @@ const QuestionManagement: React.FC = () => {
       dataIndex: 'title',
       key: 'title',
       width: '40%',
-      render: (text: string, record: Question) => (
-        <div>
-          <div style={{ marginBottom: 8, fontWeight: 500 }}>{text}</div>
-          <div style={{ fontSize: 12, color: '#8c8c8c' }}>
-            {record.options && record.options.length > 0 && (
-              <div>选项: {record.options.slice(0, 2).join(', ')}{record.options.length > 2 && '...'}</div>
-            )}
+      render: (text: string, record: Question) => {
+        // 简单的Markdown图片解析渲染
+        const renderContent = (content: string) => {
+          if (!content) return '';
+          const parts = content.split(/(!\[.*?\]\(.*?\))/g);
+          return (
+            <div>
+              {parts.map((part, index) => {
+                const match = part.match(/!\[(.*?)\]\((.*?)\)/);
+                if (match) {
+                  return <img key={index} src={match[2]} alt={match[1]} style={{ maxWidth: '100%', maxHeight: 150, display: 'block', margin: '8px 0', borderRadius: 4 }} />;
+                }
+                return <span key={index}>{part}</span>;
+              })}
+            </div>
+          );
+        };
+        return (
+          <div>
+            <div style={{ marginBottom: 8, fontWeight: 500 }}>{renderContent(text)}</div>
+            <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+              {record.options && record.options.length > 0 && (
+                <div>
+                  {record.options.slice(0, 4).map((opt: string, idx: number) => (
+                    <div key={idx} style={{ marginBottom: 4 }}>
+                      <span style={{ fontWeight: 500 }}>{String.fromCharCode(65 + idx)}. </span>
+                      {opt && opt.includes('![') ? (
+                        <img
+                          src={opt.match(/!\[.*?\]\((.*?)\)/)?.[1] || ''}
+                          alt={`选项${String.fromCharCode(65 + idx)}`}
+                          style={{ maxWidth: 60, maxHeight: 40, verticalAlign: 'middle', borderRadius: 2 }}
+                        />
+                      ) : (
+                        <span>{opt?.slice(0, 20)}{opt && opt.length > 20 ? '...' : ''}</span>
+                      )}
+                    </div>
+                  ))}
+                  {record.options.length > 4 && <div>...还有{record.options.length - 4}个选项</div>}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       title: '题型',
@@ -284,7 +318,7 @@ const QuestionManagement: React.FC = () => {
     setImportLoading(true);
     setImportProgress(0);
     setImportStatus('开始解析...');
-    
+
     try {
       // 模拟进度更新
       const progressInterval = setInterval(() => {
@@ -295,11 +329,11 @@ const QuestionManagement: React.FC = () => {
       }, 200);
 
       setImportStatus('正在解析文件...');
-      
+
       // 使用前端解析
       const fileType = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls') ? 'excel' : 'word';
       let result: ImportResult;
-      
+
       if (fileType === 'excel') {
         const { parseExcelDocument } = await import('../utils/fileImport');
         result = await parseExcelDocument(file);
@@ -314,12 +348,12 @@ const QuestionManagement: React.FC = () => {
 
       if (result.success && result.questions) {
         setImportStatus('正在保存题目...');
-        
+
         // 将解析出的题目添加到store中
         result.questions.forEach(question => {
           addQuestion(question);
         });
-        
+
         message.success(result.message);
         setImportModalVisible(false);
       } else {
@@ -380,8 +414,8 @@ const QuestionManagement: React.FC = () => {
           </Space>
         </div>
         <div className="page-card-content">
-          <Tabs 
-            defaultActiveKey="list" 
+          <Tabs
+            defaultActiveKey="list"
             items={[
               {
                 key: 'list',
@@ -591,7 +625,7 @@ const QuestionManagement: React.FC = () => {
         footer={null}
         width={800}
       >
-        <FileUpload 
+        <FileUpload
           onImportComplete={(result) => {
             if (result.successCount > 0) {
               // 刷新题目列表

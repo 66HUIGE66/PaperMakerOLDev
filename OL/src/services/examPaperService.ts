@@ -1,6 +1,9 @@
 import { apiClient } from '../config/api';
 import { ExamPaper, PageResponse, ApiResponse } from '../types';
 
+// 重新导出 ExamPaper 以供其他组件使用
+export type { ExamPaper };
+
 export interface ExamPaperCreateRequest {
   title: string;
   description?: string;
@@ -51,20 +54,20 @@ export const examPaperService = {
           return v != null && v !== '';
         })
       );
-      
+
       console.log('发送请求参数:', cleanParams);
       console.log('请求URL: /exam-paper/page');
-      
-      const response = await apiClient.get<ApiResponse<PageResponse<ExamPaper>>>('/exam-paper/page', { 
-        params: cleanParams 
+
+      const response = await apiClient.get<ApiResponse<PageResponse<ExamPaper>>>('/exam-paper/page', {
+        params: cleanParams
       });
-      
+
       console.log('API原始响应:', response);
       console.log('响应状态码:', response.status);
       console.log('响应data.code:', response.data?.code);
       console.log('响应data.message:', response.data?.message);
       console.log('响应data.object:', response.data?.object);
-      
+
       if (response.data.code === 200) {
         const pageData = response.data.object;
         console.log('获取试卷列表成功:', {
@@ -74,7 +77,7 @@ export const examPaperService = {
           records: pageData.records?.length,
           firstRecordKeys: pageData.records?.[0] ? Object.keys(pageData.records[0]) : []
         });
-        
+
         // 详细检查records数组
         if (pageData.records && pageData.records.length > 0) {
           console.log('✅ records数组有', pageData.records.length, '条记录');
@@ -91,7 +94,7 @@ export const examPaperService = {
           console.warn('⚠️ pageData.records为空或未定义');
           console.warn('pageData对象:', JSON.stringify(pageData, null, 2));
         }
-        
+
         // 确保records数组中的每个对象都正确映射
         const mappedRecords = (pageData.records || []).map((record: any) => {
           // 调试：检查原始记录
@@ -101,7 +104,7 @@ export const examPaperService = {
             console.log('原始record.creatorName:', record.creatorName);
             console.log('原始record.creatorId:', record.creatorId);
           }
-          
+
           // 确保creatorName正确提取
           let creatorName = record.creatorName;
           if (creatorName === null || creatorName === undefined || creatorName === 'null' || creatorName === 'undefined') {
@@ -109,7 +112,7 @@ export const examPaperService = {
           } else {
             creatorName = String(creatorName);
           }
-          
+
           return {
             ...record,
             creatorName: creatorName,
@@ -118,7 +121,7 @@ export const examPaperService = {
             updatedAt: record.updatedAt || record.updateTime
           };
         });
-        
+
         return {
           ...pageData,
           records: mappedRecords
@@ -298,7 +301,6 @@ export const examPaperService = {
     }
   },
 
-  // 复制系统试卷到个人题库
   async copySystemPaper(id: number): Promise<ExamPaper> {
     try {
       const response = await apiClient.post<ApiResponse<ExamPaper>>(`/exam-paper/copy/${id}`);
@@ -309,6 +311,47 @@ export const examPaperService = {
       }
     } catch (error: any) {
       throw new Error(error.response?.data?.message || '复制试卷失败，请检查网络连接');
+    }
+  },
+
+  // 从试卷中删除题目
+  async removeQuestionFromPaper(paperId: number, paperQuestionId: number): Promise<void> {
+    try {
+      const response = await apiClient.delete<ApiResponse<void>>(`/exam-paper/${paperId}/questions/${paperQuestionId}`);
+      if (response.data.code !== 200) {
+        throw new Error(response.data.message || '删除题目失败');
+      }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '删除题目失败');
+    }
+  },
+
+  // 更新试卷中题目的分数
+  async updateQuestionScore(paperId: number, paperQuestionId: number, score: number): Promise<void> {
+    try {
+      // 使用 params 传递 score
+      const response = await apiClient.put<ApiResponse<void>>(`/exam-paper/${paperId}/questions/${paperQuestionId}`, null, {
+        params: { score }
+      });
+      if (response.data.code !== 200) {
+        throw new Error(response.data.message || '更新分数失败');
+      }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '更新分数失败');
+    }
+  },
+
+  // 添加题目到试卷
+  async addQuestionToPaper(paperId: number, questionId: number, score: number = 5): Promise<void> {
+    try {
+      const response = await apiClient.post<ApiResponse<void>>(`/exam-paper/${paperId}/questions`, null, {
+        params: { questionId, score }
+      });
+      if (response.data.code !== 200) {
+        throw new Error(response.data.message || '添加题目失败');
+      }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '添加题目失败');
     }
   }
 };
